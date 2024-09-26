@@ -1,4 +1,4 @@
-function [zs,output] = quantcarve(S,DEM,tau,varargin)
+function [zs,output] = quantcarve(S,DEM,tau,options)
 
 %QUANTCARVE Quantile carving
 %
@@ -76,54 +76,37 @@ function [zs,output] = quantcarve(S,DEM,tau,varargin)
 %
 % See also: STREAMobj/mincosthydrocon, STREAMobj/crs, STREAMobj/imposemin
 % 
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 25. September, 2017
+% Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+% Date: 26. September, 2024
 
-% check and parse inputs
-narginchk(2,inf)
-
-if nargin == 2
-    tau = 0.5;
+arguments
+    S   STREAMobj
+    DEM  {mustBeGRIDobjOrNal(DEM,S)}
+    tau (1,1) {mustBeNumeric,mustBeInRange(tau,0,1,"exclusive")} = 0.5
+    options.waitbar (1,1) = false
+    options.mingradient (1,1) {mustBeNonnegative} = 0
+    options.fixedoutlet (1,1) = false
+    options.split (1,1) = 1
 end
 
-p = inputParser;
-p.FunctionName = 'STREAMobj/quantcarve';
-addParameter(p,'split',2);
-addParameter(p,'mingradient',0,@(x) isscalar(x) && x>=0);
-addParameter(p,'fixedoutlet',false);
-addParameter(p,'waitbar',true);
-parse(p,varargin{:});
-
-validateattributes(tau,{'numeric'},{'>',0,'<',1},'STREAMobj/quantcarve','tau',3);
-
-% get node attribute list with elevation values
-if isa(DEM,'GRIDobj')
-    validatealignment(S,DEM);
-    z = getnal(S,DEM);
-elseif isnal(S,DEM)
-    z = DEM;
-else
-    error('Imcompatible format of second input argument')
-end
-
+z = ezgetnal(S,DEM,'double');
 if any(isnan(z))
     error('DEM or z may not contain any NaNs')
 end
 
-z = double(z);
-
 %% Run in parallel
-if p.Results.split == 1
+if options.split == 1
     % Option 1: Process each drainage basin independently
-    params = p.Results;
+    params = options;
     params.split = false;
     [CS,locS] = STREAMobj2cell(S);
+    params = namedargs2cell(params);
     if numel(CS) > 1
         % run only in parallel if more than one drainage basin
         Cz = cellfun(@(ix) z(ix),locS,'UniformOutput',false);
         Czs = cell(size(CS));
         parfor r = 1:numel(CS)
-            Czs{r} = quantcarve(CS{r},Cz{r},tau,params);
+            Czs{r} = quantcarve(CS{r},Cz{r},tau,params{:});
         end
         
         zs = nan(size(z));
@@ -132,25 +115,25 @@ if p.Results.split == 1
         end
         return
     else
-        zs = quantcarve(S,z,tau,params);
+        zs = quantcarve(S,z,tau,params{:});
         return
     end
     
-elseif p.Results.split == 2
+elseif options.split == 2
     % Option 2: Process tributaries in parallel
     
     [CS,locb,CID] = STREAMobj2cell(S,'trib');
     
-    params = p.Results;
+    params = options;
     params.split = 0;
     params.fixedoutlet = false;
     wb     = params.waitbar;
     params.waitbar = false;
-    
+
+    params = namedargs2cell(params);
     if wb
         h = waitbar(0,'Processing');
     end
-    
     
     ntribs = max(CID);
     
@@ -169,7 +152,7 @@ elseif p.Results.split == 2
         
         parfor r2 = 1:numel(CStemp)
             % quantcarve(Stribs{r},ztribs{r},tau,params);
-            Czstemp{r2} = quantcarve(CStemp{r2},ztribs{r2},tau,params);
+            Czstemp{r2} = quantcarve(CStemp{r2},ztribs{r2},tau,params{:});
         end
         for r2 = 1:numel(CStemp)
             z(locbtemp{r2}) = Czstemp{r2};
@@ -186,8 +169,6 @@ elseif p.Results.split == 2
 end
 
 
-
-
 %% Carve function starts here
 % upstream distance
 d  = S.distance;
@@ -196,7 +177,7 @@ n  = numel(S.IXgrid);
 
 f   = [tau*ones(n,1);(1-tau)*ones(n,1);zeros(n,1)];
 % Equalities
-if ~p.Results.fixedoutlet
+if ~options.fixedoutlet
     Aeq = [speye(n),-speye(n),speye(n)];
 else 
     OUTL = streampoi(S,'outlet','logical');
@@ -212,7 +193,7 @@ lb  = [zeros(n,1);zeros(n,1);-inf*ones(n,1)];
 d = 1./(d(S.ix)-d(S.ixc));
 A = [sparse(n,n*2) (sparse(S.ix,S.ixc,d,n,n)-sparse(S.ix,S.ix,d,n,n))];
 
-if p.Results.mingradient~=0
+if options.mingradient~=0
     b = zeros(n,1);
     b(S.ix) = -p.Results.mingradient;
 else
@@ -222,9 +203,9 @@ end
 
 %% Solve the linear programme
 % set options
-options = optimset('Display','off','algorithm','interior-point'); %'OptimalityTolerance',1e-6,
+opts = optimset('Display','off','algorithm','interior-point'); %'OptimalityTolerance',1e-6,
 
-[bhat,~,~,output] = linprog(f,A,b,Aeq,beq,lb,[],options);
+[bhat,~,~,output] = linprog(f,A,b,Aeq,beq,lb,[],opts);
 zs = bhat(2*n+1:end);
 
 

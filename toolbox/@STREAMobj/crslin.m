@@ -1,4 +1,4 @@
-function [zs,exitflag,output] = crslin(S,DEM,varargin)
+function [zs,exitflag,output] = crslin(S,DEM,options)
 
 %CRSLIN constrained regularized smoothing of the channel length profile
 %
@@ -100,39 +100,37 @@ function [zs,exitflag,output] = crslin(S,DEM,varargin)
 % See also: STREAMobj/mincosthydrocon, quadprog, STREAMobj/crs, 
 %           STREAMobj/quantcarve, STREAMobj/smooth
 % 
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 11. May, 2016
+% Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+% Date: 26. September, 2024
 
+arguments
+    S   STREAMobj
+    DEM {mustBeGRIDobjOrNal(DEM,S)}
+    options.K  (1,1) {mustBeNumeric,mustBePositive} = 1;
+    options.imposemin (1,1) = false
+    options.attachtomin (1,1) = false
+    options.attachheads (1,1) = false
+    options.nonstifftribs (1,1) = true
+    options.mingradient   (1,1) = 0
+    options.discardflats   (1,1) = false
+    options.knickpoints   = []
+    options.precisecoords = []
+    options.plot (1,1) = false
+    options.weights = 'none'
+    options.nocr = false
+    options.maxcurvature = inf
 
-% check and parse inputs
-narginchk(2,inf)
+end
 
-p = inputParser;
-p.FunctionName = 'STREAMobj/crslin';
-addParameter(p,'K',1,@(x) (isscalar(x) && x>0) || isa(x,'GRIDobj'));
-addParameter(p,'imposemin',false,@(x) isscalar(x));
-addParameter(p,'attachtomin',false,@(x) isscalar(x));
-addParameter(p,'attachheads',false,@(x) isscalar(x));
-addParameter(p,'nonstifftribs',true,@(x) isscalar(x));
-addParameter(p,'mingradient',0,@(x) (isscalar(x) && (x>=0 || isnan(x))));
-addParameter(p,'maxcurvature',inf);
-addParameter(p,'discardflats',false);
-addParameter(p,'knickpoints',[]);
-addParameter(p,'precisecoords',[]);
-addParameter(p,'plot',false);
-addParameter(p,'weights','none',@(x) ischar(x));
-addParameter(p,'nocr',false);
-parse(p,varargin{:});
 
 % get node attribute list with elevation values
 z = ezgetnal(S,DEM,'double');
-
 if any(isnan(z))
     error('DEM or z may not contain any NaNs')
 end
 
 % get weights
-wtype = lower(p.Results.weights);
+wtype = lower(options.weights);
 switch wtype
     case 'positive'
         zimp  = imposemin(S,z);
@@ -151,7 +149,7 @@ switch wtype
 end
     
 % minimum imposition
-if p.Results.imposemin
+if options.imposemin
     if ~exist('zimp','var')
         z = imposemin(S,z);
     else
@@ -168,7 +166,7 @@ nr = numel(S.IXgrid);
 %
 % This matrix is an identity matrix, since we are only interested in 
 % predicting values at the node locations of the network.
-if ~p.Results.discardflats
+if ~options.discardflats
     Afid = speye(nr,nr);
     tf   = false(nr,1);
 else
@@ -218,8 +216,8 @@ end
 colix  = [S.ixc(loc(I)) S.ixc(I) S.ix(I)];
 
 % Set user-supplied knickpoints to non-stiff
-if ~isempty(p.Results.knickpoints)
-    xy = p.Results.knickpoints;
+if ~isempty(options.knickpoints)
+    xy = options.knickpoints;
     [~,~,IX] = snap2stream(S,xy(:,1),xy(:,2));
     I  = ismember(S.IXgrid,IX);
     I  = I(colix(:,2));
@@ -232,14 +230,14 @@ val    = [2./((d(colix(:,2))-d(colix(:,1))).*(d(colix(:,3))-d(colix(:,1)))) ...
           2./((d(colix(:,3))-d(colix(:,2))).*(d(colix(:,3))-d(colix(:,1))))];
       
 % matrix for maximum curvature constraint      
-if ~isinf(p.Results.maxcurvature)
+if ~isinf(options.maxcurvature)
     nrrows = size(colix,1);
     rowix  = repmat((1:nrrows)',1,3);
     Asdc   = sparse(rowix(:),colix(:),val(:),nrrows,nr);
 end
 
 % Set tributaries to non-stiff
-if p.Results.nonstifftribs
+if options.nonstifftribs
     dd = distance(S,'max_from_ch');
     I  = (dd(colix(:,2)) - dd(colix(:,3)))>=(sqrt(2*S.cellsize.^2)+S.cellsize/2);
     colix(I,:) = [];
@@ -253,9 +251,9 @@ Asd    = sparse(rowix(:),colix(:),val(:),nrrows,nr);
 
 %% Setup linear system
 % balance stiffness and fidelity
-% F      = p.Results.K * sqrt(size(Afid,1)/nrrows);
-if ~p.Results.nocr
-    F      = p.Results.K * S.cellsize^2 * sqrt(size(Afid,1)/nrrows); %norm(Afid,1)/norm(Asd,1);
+% F      = options.K * sqrt(size(Afid,1)/nrrows);
+if ~options.nocr
+    F      = options.K * S.cellsize^2 * sqrt(size(Afid,1)/nrrows); %norm(Afid,1)/norm(Asd,1);
     Asd    = F*Asd;
     % new with weighted scheme
     W      = spdiags(w,0,nr,nr);
@@ -269,7 +267,7 @@ else
     b  = z.*(~tf);
 end
 
-if isnan(p.Results.mingradient)
+if isnan(options.mingradient)
     % no minimum gradient imposition involves only solving the
     % overdetermined system of equations. 
     zs     = C\b;
@@ -282,13 +280,13 @@ else
     d = 1./(d(S.ix)-d(S.ixc));
     A = (sparse(S.ix,S.ixc,d,nr,nr)-sparse(S.ix,S.ix,d,nr,nr));
     e = zeros(nr,1);
-    if p.Results.mingradient ~= 0
-        e(S.ix) = -p.Results.mingradient;
+    if options.mingradient ~= 0
+        e(S.ix) = -options.mingradient;
     end
     
-    if ~isinf(p.Results.maxcurvature)
+    if ~isinf(options.maxcurvature)
         A = [A;-Asdc];
-        e = [e;repmat(p.Results.maxcurvature,size(Asdc,1),1)];
+        e = [e;repmat(options.maxcurvature,size(Asdc,1),1)];
     end
 
     % reformulate for quadprog
@@ -296,13 +294,13 @@ else
     c = -2*C'*b;
     
     lb = [];
-    if p.Results.attachtomin
+    if options.attachtomin
         ub = double(z);
     else
         ub = double([]);
     end
     
-    if p.Results.attachheads
+    if options.attachheads
         channelheads = streampoi(S,'channelheads','logical');
         Aeq = spdiags(+channelheads,0,nr,nr);
         eeq = zeros(nr,1);
@@ -312,18 +310,18 @@ else
         eeq = [];
     end
     
-    if ~isempty(p.Results.precisecoords)
+    if ~isempty(options.precisecoords)
         % Settings to force profiles to run through a prescribed set of 
         % elevations
         [~,~,IXp] = snap2stream(S,...
-            p.Results.precisecoords(:,1),...
-            p.Results.precisecoords(:,2));
+            options.precisecoords(:,1),...
+            options.precisecoords(:,2));
         [~,locb] = ismember(IXp,S.IXgrid);
         precise = zeros(nr,1);
         precise(locb) = 1;
         
         eeqb = zeros(nr,1);
-        eeqb(locb) = double(p.Results.precisecoords(:,3));
+        eeqb(locb) = double(options.precisecoords(:,3));
         inan = isnan(eeqb);
         eeqb(inan) = 0;
         precise(inan) = 0;
@@ -338,27 +336,23 @@ else
         end
     end
     
-    % solve
-    if verLessThan('optim','6.3')
-        options = optimset('Display','off','Algorithm','interior-point-convex');
-    else
-        options = optimoptions('quadprog','Display','off');
-    end
+    % solver options
+    opts = optimoptions('quadprog','Display','off');
     
     % call to quadratic programming
-    [zs,~,exitflag,output] = quadprog(H,c,A,e,Aeq,eeq,lb,ub,z,options);
+    [zs,~,exitflag,output] = quadprog(H,c,A,e,Aeq,eeq,lb,ub,z,opts);
 
 end
 
-if p.Results.plot
+if options.plot
     tf = ishold(gca);
     plotdz(S,z,'color',[.6 .6 .6]);
     hold on
     plotdz(S,zs,'color','r');
     
-    if ~isempty(p.Results.precisecoords)
+    if ~isempty(options.precisecoords)
         d = S.distance(locb);
-        plot(d,p.Results.precisecoords(:,3),'s');
+        plot(d,options.precisecoords(:,3),'s');
     end
     
     if ~tf

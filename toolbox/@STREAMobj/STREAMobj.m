@@ -55,8 +55,7 @@ classdef STREAMobj
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 2. July, 2024
     
-    
-    
+        
 properties
     size      % size of instance of GRIDobj from which STREAMobj was derived
     ix        % [edge attribute] topologically sorted nodes (givers) 
@@ -76,13 +75,17 @@ end
 
 
 methods 
-    function S = STREAMobj(FD,varargin)
-        
-        narginchk(0,inf)
-        
-        if nargin == 0
-            return
+    function S = STREAMobj(FD,W,options)
+
+        arguments
+            FD  FLOWobj
+            W = []
+            options.minarea = 1000
+            options.unit {mustBeUnit(options.unit,FD)}  = getdefaultunit(FD)
+            options.outlets = []
+            options.channelheads = []
         end
+        
         
         if ismulti(FD,true)
             error('TopoToolbox:STREAMobj','STREAMobj supports only single flow directions');
@@ -90,60 +93,21 @@ methods
         
         if nargin == 2
             % Two input arguments: FD, W
-            W = varargin{1};
             validatealignment(FD,W);
-            p = inputParser;         
-            p.FunctionName = 'STREAMobj';
-            addRequired(p,'FD',@(x) isa(x,'FLOWobj'));
-            addRequired(p,'W', @(x) isa(x,'GRIDobj'));
-            parse(p,FD,W);
         else 
-            
-            if true %~isgeographic(S)
-                default_units = 'pixels';
-                default_minarea = 1000;
-            else
-                default_units = 'm';
-                default_minarea = 5e6; %m^2
-            end
-            
-            
-            % many input arguments: FD, pn-pv pairs
-            p = inputParser;
-            p.FunctionName = 'STREAMobj';
-            addRequired(p,'FD',@(x) isa(x,'FLOWobj'));
-            addParameter(p,'minarea',default_minarea,@(x) isscalar(x) && x>=0);
-            addParameter(p,'unit',default_units,@(x) ischar(validatestring(x, ...
-                            {'pixels', 'mapunits','m2','km2'}))); 
-            addParameter(p,'outlets',[],@(x) isnumeric(x));
-            addParameter(p,'channelheads',[],@(x) isnumeric(x));
-            
-            parse(p,FD,varargin{:});
-            
-            % Check whether STREAMobj is geographic
-            isgeo = false; %isgeographic(S);
-            % required
-            if ~isgeo
-                unit    = validatestring(p.Results.unit,{'pixels', 'mapunits','km2','m2'});
-            else
-                unit    = validatestring(p.Results.unit,{'km2','m2'});
-            end
-            IX      = p.Results.outlets;
-            minarea = p.Results.minarea;
-            channelheads = p.Results.channelheads;
+           
+            IX           = options.outlets;
+            minarea      = options.minarea;
+            channelheads = options.channelheads;
+            unit         = options.unit;
             
             % Dealing with units here
-            if ~isgeo
+            if ~isGeographic(FD)
                 switch unit
                     case 'mapunits'
                         minarea = minarea/(FD.cellsize.^2);
-                    case 'km2'
-                        minarea = minarea/1e6/(FD.cellsize.^2);
-                end
-            else
-                switch unit
-                    case 'km2'
-                        minarea = minarea/1e6;
+                    case 'km'
+                        minarea = minarea*1e6/(FD.cellsize.^2); 
                 end
             end
             
@@ -218,6 +182,8 @@ methods
     function d = get.distance(S)
         % [dynamic property] distance from outlet
         
+        % This parts needs some work once we allow STREAMobjs and FLOWobjs
+        % to be based on geographic grids.
         if false % isgeographic(S)
             d_node = sph_distance(S.y(S.ix),S.x(S.ix),S.y(S.ixc),S.x(S.ixc),S.georef.gcs);
         else
@@ -314,22 +280,16 @@ methods
     % See also: STREAMobj, STREAMobj/getnal, STREAMobj/modify,
     %           STREAMobj/rmnode
     % 
-    % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-    % Date: 12. December, 2019
+    % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+    % Date: 25. September, 2024
     
-    p = inputParser;
-    p.FunctionName = 'STREAMobj/subgraph';
-    addRequired(p,'S',@(x) isa(x,'STREAMobj'));
-    addRequired(p,'nal',@(x) isnal(S,x) || isa(x,'GRIDobj'));
-    parse(p,S,nal);
-    
-    if isa(nal,'GRIDobj')
-        validatealignment(S,nal);
-        nal = getnal(S,nal);
-        nal = nal > 0;
-    else
-        nal = nal > 0;
+    arguments
+        S  STREAMobj
+        nal
     end
+
+    nal = ezgetnal(S,nal);
+    nal = nal>0; % make sure that nal is logical
     
     if all(nal)
         % do nothing
@@ -401,14 +361,15 @@ methods
     % See also: STREAMobj, STREAMobj/getnal, STREAMobj/modify,
     %           STREAMobj/subgraph
     % 
-    % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-    % Date: 26. September, 2017    
+    % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+    % Date: 25. September, 2024    
     
-    p = inputParser;
-    p.FunctionName = 'STREAMobj/rmnode';
-    addRequired(p,'S',@(x) isa(x,'STREAMobj'));
-    addRequired(p,'nal',@(x) isnal(S,x) && islogical(x));
-    parse(p,S,nal);
+    arguments
+        S    STREAMobj
+        nal  
+    end
+
+    validateattributes(nal,{'logical'},{"size",[numel(S.x) 1]},'STREAMobj/rmnode','nal',2);
     S = subgraph(S,~nal);
     
     end
@@ -446,14 +407,15 @@ methods
     %
     % See also: STREAMobj, STREAMobj/getnal, STREAMobj/modify
     % 
-    % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-    % Date: 26. September, 2017
-    
-    p = inputParser;
-    p.FunctionName = 'STREAMobj/rmedge';
-    addRequired(p,'S',@(x) isa(x,'STREAMobj'));
-    addRequired(p,'eal',@(x) isequal(size(x),size(S.ix)) && islogical(x)); %#ok<CPROPLC>
-    parse(p,S,eal);
+    % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+    % Date: 25. September, 2024
+
+    arguments
+        S    STREAMobj
+        eal  
+    end
+
+    validateattributes(eal,{'logical'},{"size",[numel(S.ix) 1]},'STREAMobj/rmnode','eal',2);
     
     eal   = ~eal;
     
@@ -534,9 +496,13 @@ methods
     % 
     % See also: STREAMobj/modify, STREAMobj/conncomps
     % 
-    % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-    % Date: 12. October, 2017
+    % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+    % Date: 25. September, 2024
     
+    arguments
+        S  STREAMobj
+        FD 
+    end
     
     n  = prod(S.size);
     M  = sparse(S.IXgrid(S.ix),S.IXgrid(S.ixc),true,n,n);
@@ -578,8 +544,12 @@ methods
     %
     % See also: STREAMobj, STREAMobj/modify
     %
-    % Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-    % Date: 31. October, 2018
+    % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+    % Date: 25. September, 2024
+    
+    arguments
+        S  STREAMobj
+    end
 
 
     % non connected nodes in the stream network are those that have neither an
@@ -591,29 +561,23 @@ methods
     end
 
 
-    function tf = isGeographic(A)
-        %ISGEOGRAPHIC Determines whether STREAMobj has a geographic coordinate system
-        %
-        % Syntax
-        %
-        %     tf = isgeographic(A)
-        %
-        tf = isprop(A.georef,"GeographicCRS");
-    end
-
-    function tf = isProjected(A)
-        %ISPROJECTED Determines whether STREAMobj has a projected coordinate system
-        %
-        % Syntax
-        %
-        %     tf = isProjected(A)
-        %
-        tf = isprop(A.georef,"ProjectedCRS");
-    end
-
 end
 end   
     
     
-    
+function unit = getdefaultunit(FD)
+    if isGeographic(FD)
+        unit = 'm';
+    else
+        unit = 'pixels';
+    end
+end
+
+function mustBeUnit(unit,FD)
+    if isGeographic(FD)
+        validatestring(unit,{'m', 'km'});
+    else
+        validatestring(unit,{'m', 'km', 'pixels', 'mapunits'});
+    end
+end
     

@@ -14,11 +14,12 @@ function [OUT,Pc] = dbentropy(FD,ix)
 %     dbentropy calculates the drainage basin entropy H (Schwanghart and
 %     Heckmann 2012) based on multiple flow directions stored in FLOWobj
 %     FD. Drainage basin entropy is derived for each pixel and quantifies
-%     the uncertainty to assign an outlet pixel. Pixel that drain towards a
-%     single outlet pixel have low entropy values, whereas pixels with high
-%     values could be assigned to two or more outlet pixels. Drainage basin
-%     entropy relies on a probabilistic interpretation of multiple flow 
-%     directions.
+%     the uncertainty to assign a specific outlet pixel. Pixels that drain
+%     towards a single outlet pixel have low entropy values, whereas pixels
+%     with high entropy values could be assigned to two or more outlet
+%     pixels. Generally, values with high entropy values are located on the
+%     divides. Drainage basin entropy relies on a probabilistic
+%     interpretation of multiple flow directions.
 %
 % Input parameters
 %
@@ -37,10 +38,9 @@ function [OUT,Pc] = dbentropy(FD,ix)
 % Example
 %
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
-%     DEM = fillsinks(DEM);
 %     FD = FLOWobj(DEM,'multi');
-%     IX = [107807 769639];
-%     [H,SB] = dbentropy(FD,IX);
+%     [FD,S] = multi2single(FD,'minarea',1000);
+%     [H,SB] = dbentropy(FD,S);
 %     imageschs(DEM,H,'colormap',flipud(hot))
 %
 % Reference
@@ -50,10 +50,15 @@ function [OUT,Pc] = dbentropy(FD,ix)
 %     Environmental Modelling and Software, 33, 106-113. 
 %     [DOI: 10.1016/j.envsoft.2012.01.016]
 %
-% See also: drainagebasins, FLOWobj
+% See also: FLOWobj/drainagebasins, FLOWobj, multi2single
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 31. August, 2024
+
+arguments
+    FD     FLOWobj
+    ix     
+end
 
 M = FLOWobj2M(FD);
 siz = FD.size;

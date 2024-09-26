@@ -1,4 +1,4 @@
-function s = streamorder(S,type)
+function s = streamorder(S,typename)
 
 %STREAMORDER Calculate stream order from STREAMobj
 %
@@ -45,10 +45,10 @@ function s = streamorder(S,type)
 
 arguments
     S  STREAMobj
-    type {mustBeMember(type,{'strahler','shreve'})} = 'strahler'
+    typename {mustBeMember(typename,{'strahler','shreve'})} = 'strahler'
 end
 
-switch type
+switch typename
     case 'strahler'
         nrc = numel(S.x);
         s   = zeros(nrc,1);

@@ -57,15 +57,13 @@ function DEM = quantcarve(FD,DEM,tau)
 % See also: STREAMobj/quantcarve, FLOWobj/imposemin, STREAMobj/crs
 % 
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 31. August, 2024
+% Date: 26. September, 2024
 
-
-% check input arguments
-narginchk(2,inf)
-if nargin == 2
-    tau = 0.5;
+arguments
+    FD   FLOWobj
+    DEM  GRIDobj
+    tau (1,1) {mustBeNumeric,mustBeInRange(tau,0,1,"exclusive")} = 0.5
 end
-validateattributes(tau,{'numeric'},{'>',0,'<',1},'FLOWobj/quantcarve','tau',3);
 
 % identify filled pixels
 I = fillsinks(DEM) > DEM;

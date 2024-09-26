@@ -1,4 +1,4 @@
-function zs = smooth(S,DEM,varargin)
+function zs = smooth(S,DEM,options)
 
 %SMOOTH smoothing of node-attribute lists
 %
@@ -118,41 +118,26 @@ function zs = smooth(S,DEM,varargin)
 % See also: STREAMobj/crs, STREAMobj/crsapp, STREAMobj/inpaintnans,
 %           STREAMobj/quantcarve, STREAMobj/crslin
 % 
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 2. September, 2020
+% Author: Wolfgang Schwanghartmaxcur (schwangh[at]uni-potsdam.de)
+% Date: 26. September, 2024
 
-
-% check and parse inputs
-narginchk(2,inf)
-
-p = inputParser;
-p.FunctionName = 'STREAMobj/smooth';
-addParameter(p,'method','regularization'); 
-addParameter(p,'split',false);
-% parameters for regularization
-addParameter(p,'K',10,@(x) (isscalar(x) && x>0));
-addParameter(p,'nstribs',true,@(x) isscalar(x));
-addParameter(p,'positive',false,@(x) isscalar(x));
-addParameter(p,'weights',[],@(x) isa(x,'GRIDobj') || isnal(S,x) || isempty(x));
-addParameter(p,'breaks',[]);
-addParameter(p,'distance',[]);
-
-parse(p,varargin{:});
-
-method = validatestring(p.Results.method,{'regularization','movmean'});
-
-% get node attribute list with elevation values
-if isa(DEM,'GRIDobj')
-    validatealignment(S,DEM);
-    z = getnal(S,DEM);
-elseif isnal(S,DEM)
-    z = DEM;
-else
-    error('Imcompatible format of second input argument')
+arguments
+    S  STREAMobj
+    DEM {mustBeGRIDobjOrNal(DEM,S)}
+    options.K  (1,1) {mustBeNumeric,mustBePositive} = 10;
+    options.method {mustBeMember(options.method,{'regularization','movmean'})} = 'regularization'
+    options.split (1,1) = false
+    options.nstribs (1,1) = true
+    options.positive (1,1) = false
+    options.weights = []
+    options.breaks = []
+    options.distance = []
 end
 
+z = ezgetnal(S,DEM);
+
 % handle weights
-weights = p.Results.weights;
+weights = options.weights;
 if isempty(weights) 
 elseif isa(weights,'GRIDobj')
     validatealignment(S,weights);
@@ -162,12 +147,12 @@ elseif isnal(S,weights)
 end
 
 % handle custom distances
-if isnal(S,p.Results.distance)
-    d = p.Results.distance;
+if isnal(S,options.distance)
+    d = options.distance;
 end
 
 % check for nans
-if strcmp(p.Results.method,'regularization') && any(isnan(z))
+if strcmp(options.method,'regularization') && any(isnan(z))
     % error('DEM or z may not contain any NaNs if method is regularization.')
     inan = isnan(z);
     z = inpaintnans(S,z,'extrap',true);
@@ -179,8 +164,8 @@ if strcmp(p.Results.method,'regularization') && any(isnan(z))
 end
 
 % run in parallel if wanted
-if p.Results.split
-    params = p.Results;
+if options.split
+    params = options;
     params.split = false;
     [CS,locS] = STREAMobj2cell(S);
     Cz = cellfun(@(ix) z(ix),locS,'UniformOutput',false);
@@ -201,10 +186,12 @@ if p.Results.split
         Cd = cell(size(CS));
     end
     params = rmfield(params,'distance');
+
+    params = namedargs2cell(params);
     
     % finally, do the smoothing
     parfor r = 1:numel(CS)
-        Czs{r} = smooth(CS{r},Cz{r},params,'weights',Cw{r},'distance',Cd{r});
+        Czs{r} = smooth(CS{r},Cz{r},params{:},'weights',Cw{r},'distance',Cd{r});
     end
 
     % write smoothed values to node-attribute list
@@ -217,8 +204,8 @@ end
 
 %% Smoothing starts here
 % upstream distance
-if ~isempty(p.Results.distance)
-    d = p.Results.distance;
+if ~isempty(options.distance)
+    d = options.distance;
 else
     d = S.distance;
 end
@@ -233,7 +220,7 @@ if nr <= 2
     return
 end
 
-switch method
+switch options.method
     case 'regularization'
 
         %% Fidelity matrix
@@ -256,19 +243,19 @@ switch method
                   2./((d(colix(:,3))-d(colix(:,2))).*(d(colix(:,3))-d(colix(:,1))))];
 
         % Set tributaries to non-stiff
-        if p.Results.nstribs
+        if options.nstribs
             dd = distance(S,'max_from_ch');
             I = (dd(colix(:,2)) - dd(colix(:,3)))>=(sqrt(2*S.cellsize.^2)+S.cellsize/2);
             colix(I,:) = [];
             val(I,:) = [];
         end
         
-        if ~isempty(p.Results.breaks)
+        if ~isempty(options.breaks)
             % do breaks come as a PPS object
-            if isa(p.Results.breaks,'PPS')
-                kp = points(p.Results.breaks,'IXgrid');
+            if isa(options.breaks,'PPS')
+                kp = points(options.breaks,'IXgrid');
             else
-                kp = p.Results.breaks;
+                kp = options.breaks;
             end
             
             % identify breaks that belong to the basin 
@@ -288,8 +275,8 @@ switch method
 
         %% Setup linear system
         % balance stiffness and fidelity
-        F      = p.Results.K * sqrt(size(Afid,1)/nrrows) * S.cellsize^2;
-        % F      = p.Results.K * norm(Afid,1)/norm(Asd,1);
+        F      = options.K * sqrt(size(Afid,1)/nrrows) * S.cellsize^2;
+        % F      = options.K * norm(Afid,1)/norm(Asd,1);
         Asd    = F*Asd;
         C      = [Afid;Asd];
         % right hand side of equation
@@ -307,11 +294,11 @@ switch method
             b = W*b;
         end
         
-        if ~p.Results.positive
+        if ~options.positive
             zs     = C\b;
         else
-            options = optimset('Display','off');
-            zs = lsqlin(C,b,[],[],[],[],zeros(nr,1),[],[],options);
+            opts = optimset('Display','off');
+            zs = lsqlin(C,b,[],[],[],[],zeros(nr,1),[],[],opts);
 
         end
         

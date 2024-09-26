@@ -1,4 +1,4 @@
-function h = plotdzm(SW,M,varargin)
+function h = plotdzm(SW,M,options)
 %PLOTDZM create color-coded distance-elevation plot from SWATHobj and GRIDobj
 %
 % Syntax
@@ -97,7 +97,7 @@ function h = plotdzm(SW,M,varargin)
 %   
 %     'backgrd'     'high','low',{'none'}
 %     if set to 'high' or 'low', the background is given the highest or
-%     lowest value in the data range, respectively. This help to control
+%     lowest value in the data range, respectively. This helps to control
 %     the appearance of the background when the plotmode is 'image'.
 %
 % 
@@ -124,57 +124,49 @@ function h = plotdzm(SW,M,varargin)
 %
 %
 % Author: Dirk Scherler (scherler[at]gfz-potsdam.de)
-% Date: June, 2013; updated August, 2017
+%         Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+% Date: 15. September, 2024
 
-
-cmaps = {'bone','colorcube','cool','copper','flag',...
-    'gray','hot','hsv','jet','lines','parula','pink','prism',...
-    'spring','summer','white','winter'};
-
-% Parse inputs
-p = inputParser;
-p.FunctionName = 'plotdzm';
-addRequired(p,'SW',@(x) isa(x,'SWATHobj'));
-addRequired(p,'M',@(x) isa(x,'GRIDobj'));
-addParamValue(p,'left',true,@(x) islogical(x))
-addParamValue(p,'right',true,@(x) islogical(x))
-addParamValue(p,'direction','x',@(x) ismember(x,{'x','y'}))
-addParamValue(p,'distadjust',0,@(x) isnumeric(x))
-addParamValue(p,'distance',[],@(x) isnumeric(x))
-addParamValue(p,'zmode','absolute',@(x) ismember(x,{'absolute','relative'}))
-addParamValue(p,'colormap','pink',@(x) ismember(x,cmaps))
-addParamValue(p,'colormode','inverse',@(x) ismember(x,{'normal','inverse'}))
-addParamValue(p,'colorrange',[-inf,inf],@(x) isnumeric(x))
-addParamValue(p,'colorbar',false, @(x) islogical(x))
-addParamValue(p,'colorbarlabel','', @(x) ischar(x))
-addParamValue(p,'sortm','descend',@(x) ismember(x,{'ascend','descend','none'}))
-addParamValue(p,'plotmode','image',@(x) ismember(x,{'plot','scatter','image'}))
-addParamValue(p,'xstretch',1, @(x) isnumeric(x) & x>0)
-addParamValue(p,'ystretch',1, @(x) isnumeric(x) & x>0)
-addParamValue(p,'markersize',4,@(x) isnumeric(x))
-addParamValue(p,'backgrd','none',@(x) ismember(x,{'high','low','none'}))
-
-
-parse(p,SW,M,varargin{:});
+arguments
+    SW    SWATHobj
+    M     GRIDobj
+    options.left (1,1) = true
+    options.right (1,1) = true;
+    options.direction {mustBeTextScalar,mustBeMember(options.direction,{'x','y'})} = 'x';
+    options.distadjust (1,1) {mustBeNumeric} = 0
+    options.distance {mustBeNumeric} = []
+    options.zmode {mustBeTextScalar,mustBeMember(options.zmode,{'absolute','relative'})} = 'absolute'
+    options.colormap = 'pink'
+    options.colormode {mustBeTextScalar,mustBeMember(options.colormode,{'normal','inverse'})} = 'normal'
+    options.colorrange (1,2) = [-inf inf]
+    options.colorbar (1,1) = false
+    options.colorbarlabel  = ''
+    options.sortm {mustBeTextScalar,mustBeMember(options.sortm,{'descend','ascend','none'})} = 'descend'
+    options.plotmode  {mustBeTextScalar,mustBeMember(options.plotmode,{'plot','scatter','image'})} = 'image'
+    options.xstretch (1,1) {mustBeNumeric,mustBePositive} = 1
+    options.ystretch (1,1) {mustBeNumeric,mustBePositive} = 1
+    options.markersize (1,1) {mustBeNumeric,mustBePositive} = 4
+    options.backgrd  {mustBeTextScalar,mustBeMember(options.backgrd,{'none','low','high'})} = 'none'
+end
 
 % parameters
-left       = p.Results.left;
-right      = p.Results.right;
-direction  = p.Results.direction;
-distadjust = p.Results.distadjust;
-distance   = p.Results.distance;
-zmode      = p.Results.zmode;
-colmap     = p.Results.colormap;
-colmode    = p.Results.colormode;
-colrange   = p.Results.colorrange;
-colbar     = p.Results.colorbar;
-cbarlabel  = p.Results.colorbarlabel;
-sortm      = p.Results.sortm;
-plotmode   = p.Results.plotmode;
-markersize = p.Results.markersize;
-xstretch   = p.Results.xstretch;
-ystretch   = p.Results.ystretch;
-backgrd    = p.Results.backgrd;
+left       = options.left;
+right      = options.right;
+direction  = options.direction;
+distadjust = options.distadjust;
+distance   = options.distance;
+zmode      = options.zmode;
+colmap     = options.colormap;
+colmode    = options.colormode;
+colrange   = options.colorrange;
+colbar     = options.colorbar;
+cbarlabel  = options.colorbarlabel;
+sortm      = options.sortm;
+plotmode   = options.plotmode;
+markersize = options.markersize;
+xstretch   = options.xstretch;
+ystretch   = options.ystretch;
+backgrd    = options.backgrd;
 
 
 warning('off')
