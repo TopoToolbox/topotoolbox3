@@ -79,14 +79,8 @@ Inan      = isnan(dem);
 % set nans to -inf
 dem(Inan) = -inf;
 
-if nargin == 1
-    % fill depressions using imreconstruct with an 8-neighborhood
-    marker     = -dem;
-    II         = false(size(dem));
-    II(2:end-1,2:end-1) = true;
-    marker(II & ~Inan) = -inf;
-    demfs      = -imreconstruct(marker,-dem,8);
-    
+if nargin == 1    
+    demfs = tt_fillsinks(dem);
 elseif nargin==2 && md
     
     % create mask
