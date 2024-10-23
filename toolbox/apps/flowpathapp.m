@@ -134,7 +134,7 @@ hButtonColors(4) = uimenu(hButtonMenuColor,'Label','yellow','Checked','off','Cal
 hButtonColors(5) = uimenu(hButtonMenuColor,'Label','red','Checked','off','Callback',@(src,event) changelinecolor(src,event));
 
 
-hButtonClear = uimenu(hMenuView,'Label','Clear','Callback',@(src,event) clearvectorplots);  
+hButtonClear = uimenu(hMenuView,'Label','Clear','Callback',@(src,event) clearvectorplots);  %#ok<*NASGU>
 
 hMenuExport   = uimenu(hFig,'Label','Export'); 
 hButtonExport = uimenu(hMenuExport,'Label','Export STREAMobj to workspace','Callback',@(src,event) exporttoworkspace);    
@@ -255,7 +255,7 @@ hPlotProfiles = [];
         % set values in the ixcix raster (see FD.fastindexing) to zero
         % where the channel has been identified. This will ensure that
         % these locations are not visited again and thus for fast execution
-        if LOGgrid(IXchannel{counter}(end)) == 0;
+        if LOGgrid(IXchannel{counter}(end)) == 0
             LOGgrid(IXchannel{counter}) = counter;
             distance{counter} = distance{counter}(end) - distance{counter};
         else
@@ -322,14 +322,14 @@ hPlotProfiles = [];
 
     end
 
-    function writetoexcel(src,event)
+    function writetoexcel(~,~)
         
         
         if isempty(IXchannel)
             warndlg('No streams available for export.');
         else
             [D,header] = makedataset(IXchannel,distance);
-            D = [header; num2cell(D)];
+            D = array2table(D,'VariableNames',header);
             
             [FileName,PathName] = uiputfile({'*.xlsx';'*.xls'},'Write to Excel');
             
@@ -337,12 +337,12 @@ hPlotProfiles = [];
                 return
             end
             
-            xlswrite([PathName FileName],D);
+            writetable(D,[PathName FileName])
         
         end
     end
 
-    function writetotxtfile(src,event)
+    function writetotxtfile(~,~)
  
         if isempty(IXchannel)
             warndlg('No streams available for export.');
@@ -357,9 +357,9 @@ hPlotProfiles = [];
             
             fid = fopen([PathName FileName], 'w');
             
-            for r = 1:numel(header)
-                fprintf(fid, header{r});
-                if r < numel(header)
+            for iter = 1:numel(header)
+                fprintf(fid, header{iter});
+                if iter < numel(header)
                     fprintf(fid, '\t');
                 end 
             end
@@ -374,7 +374,7 @@ hPlotProfiles = [];
         end
     end
 
-    function writetoshape(src,event)
+    function writetoshape(~,~)
 
         if isempty(IXchannel)
             warndlg('No streams available for export.');
@@ -382,19 +382,19 @@ hPlotProfiles = [];
             warndlg('The function shapewrite is not available. Shapewrite is part of the Mapping Toolbox.');
         else
                         
-            for r = 1:numel(IXchannel)
+            for iter = 1:numel(IXchannel)
 
-                SHP(r).Geometry = 'Line';
-                [SHP(r).X, SHP(r).Y] = ind2coord(DEM,IXchannel{r}(:)); 
-                SHP(r).X = SHP(r).X';
-                SHP(r).Y = SHP(r).Y';
-                SHP(r).ID = r;
-                SHP(r).minZ = double(min(DEM.Z(IXchannel{r})));
-                SHP(r).maxZ = double(max(DEM.Z(IXchannel{r})));
-                SHP(r).length = double(max(distance{r})-min(distance{r}));
-                SHP(r).tribtoID = double(LOGgrid(IXchannel{r}(end)));
-                if SHP(r).tribtoID == SHP(r).ID
-                    SHP(r).tribtoID = 0;
+                SHP(iter).Geometry = 'Line';
+                [SHP(iter).X, SHP(iter).Y] = ind2coord(DEM,IXchannel{iter}(:)); 
+                SHP(iter).X = SHP(iter).X';
+                SHP(iter).Y = SHP(iter).Y';
+                SHP(iter).ID = iter;
+                SHP(iter).minZ = double(min(DEM.Z(IXchannel{iter})));
+                SHP(iter).maxZ = double(max(DEM.Z(IXchannel{iter})));
+                SHP(iter).length = double(max(distance{iter})-min(distance{iter}));
+                SHP(iter).tribtoID = double(LOGgrid(IXchannel{iter}(end)));
+                if SHP(iter).tribtoID == SHP(iter).ID
+                    SHP(iter).tribtoID = 0;
                 end
 
             end
@@ -413,7 +413,7 @@ hPlotProfiles = [];
   
     end
 
-    function changelinecolor(src,event)
+    function changelinecolor(src,~)
         
         
         I = src == hButtonColors;
@@ -432,13 +432,13 @@ hPlotProfiles = [];
         A = flowacc(FD);
         G = gradient(FD,DEM);
         D = cell(numel(IXchannel),1);
-        for r = 1:numel(IXchannel)
-            D{r}(1:numel(IXchannel{r}),1) = repmat(r,numel(IXchannel{r}),1);
-            [D{r}(:,2), D{r}(:,3)] = ind2coord(DEM,IXchannel{r}(:));            
-            D{r}(:,4) = distance{r}(:);
-            D{r}(:,5) = DEM.Z(IXchannel{r}(:));
-            D{r}(:,6) = A.Z(IXchannel{r}(:)).*(DEM.cellsize).^2;
-            D{r}(:,7) = G.Z(IXchannel{r}(:));
+        for iter = 1:numel(IXchannel)
+            D{iter}(1:numel(IXchannel{iter}),1) = repmat(iter,numel(IXchannel{iter}),1);
+            [D{iter}(:,2), D{iter}(:,3)] = ind2coord(DEM,IXchannel{iter}(:));            
+            D{iter}(:,4) = distance{iter}(:);
+            D{iter}(:,5) = DEM.Z(IXchannel{iter}(:));
+            D{iter}(:,6) = A.Z(IXchannel{iter}(:)).*(DEM.cellsize).^2;
+            D{iter}(:,7) = G.Z(IXchannel{iter}(:));
         end
         
         D = cell2mat(D);

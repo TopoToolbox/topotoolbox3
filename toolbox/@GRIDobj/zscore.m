@@ -1,6 +1,6 @@
 function X = zscore(X)
 
-%ZSCORE standardized z-scores for GRIDobj
+%ZSCORE Standardized z-scores for GRIDobj
 %
 % Syntax
 %

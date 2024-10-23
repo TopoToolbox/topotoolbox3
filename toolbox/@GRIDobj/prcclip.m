@@ -1,6 +1,6 @@
 function [lims,A] = prcclip(A,prc,symmetric)
 
-%PRCCLIP percentile clipping
+%PRCCLIP Percentile clipping
 %
 % Syntax
 %
@@ -10,24 +10,36 @@ function [lims,A] = prcclip(A,prc,symmetric)
 %     
 % Description
 %
-%     PRCCLIP determines the values lims that clip the values in A to range
-%     between the nth percentile and 100-nth percentile. prc can be a
-%     scalar or two element vector. If prc is a scalar, then lims are
-%     determined by the prc'th and 100-prc'th percentile. If prc is a
-%     vector, it contains the lower and upper percentile (e.g. [2 98]).
+%     This function clips the values of the input `GRIDobj` to a specified
+%     percentile range, allowing for optional symmetric clipping. The
+%     function calculates the cumulative distribution of values in the `Z`
+%     field of the GRIDobj, ignoring NaNs. It determines the clipping
+%     limits based on the specified percentile range and adjusts the values
+%     in `A.Z` accordingly. If the symmetric option is enabled, the
+%     clipping limits are made symmetric around zero. If the resulting
+%     limits are identical, a warning is issued, and no changes are made to
+%     the `Z` values.
 %
 % Input arguments
 %
 %     A          GRIDobj
-%     prc        percentile (scalar or two element vector)
-%     symmetric  if true, lims will be symmetric around zero. prcclip will
-%                determine the percentiles and then will adjust the limits
-%                so that they range between 
-%                [-max(abs(lims))  max(abs(lims))]
+%     prc        Percentile for clipping (default = 2). This value is
+%                interpreted as the percentage of data to clip from both
+%                the lower and upper ends of the distribution. If a scalar
+%                is provided, it clips at prc% from the lower bound and
+%                (100 - prc)% from the upper bound. To specify different
+%                lower and upper clipping thresholds, provide 'prc' as a
+%                2-element vector [lower_percentile upper_percentile].
+%     symmetric  Boolean flag (default = false). If true, the clipping
+%                limits are forced to be symmetric around zero by taking
+%                the maximum absolute value of the lower and upper bounds.
+%                This is useful for visualizing data with a balanced range
+%                about zero.
 %
 % Output arguments
 %
-%     lims       limits
+%     lims       A two-element vector [lval, uval] representing the 
+%                calculated lower and upper clipping limits.
 %     Ac         percentile clipped GRIDobj
 %
 % Example
@@ -44,13 +56,11 @@ function [lims,A] = prcclip(A,prc,symmetric)
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 14. June, 2024
 
-if nargin == 1
-    prc = 2;
-    symmetric = false;
-elseif nargin == 2
-    symmetric = false;
+arguments
+    A    GRIDobj
+    prc  = 2
+    symmetric (1,1) = false
 end
-    
     
 qclip = prc/100;
 if numel(qclip) == 1
