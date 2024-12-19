@@ -100,7 +100,7 @@ narginchk(1,3);
 switch lower(FD.type)
     case {'multi','dinf'}
     error('TopoToolbox:drainagebasins',...
-        'Drainage basins are not defined for divergent flows');
+        'Drainage basins are not defined for divergent flows.');
 end
 
 % create temporary indices to gain speed with R2015b and later

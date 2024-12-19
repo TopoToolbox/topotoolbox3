@@ -1,6 +1,6 @@
 function DEM = dilate(DEM,SE)
 
-%DILATE morphological dilation
+%DILATE Morphological dilation
 %
 % Syntax
 %
@@ -10,14 +10,24 @@ function DEM = dilate(DEM,SE)
 %
 %     dilate is a simple wrapper around imdilate that handles nans.
 %
-% See also: IMDILATE
+% Input arguments
 %
+%     DEM     GRIDobj
+%     SE      structuring element. Default is ones(3).
 %
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 6. February, 2013
+% Output arguments
+%
+%     DEMd    GRIDobj
+%
+% See also: imdilate, GRIDobj/erode
+%
+% Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+% Date: 10. December, 2024
 
-
-
+arguments
+    DEM  GRIDobj
+    SE   = ones(3)
+end
 
 if isa(DEM.Z,'double') || isa(DEM.Z,'single')
     I = isnan(DEM.Z);

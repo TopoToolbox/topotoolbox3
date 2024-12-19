@@ -1,21 +1,33 @@
 function DEM = erode(DEM,SE)
 
-%ERODE morphological erosion
+%ERODE Morphological erosion
 %
 % Syntax
 %
-%     DEMd = erode(DEM,SE)
+%     DEMe = erode(DEM,SE)
 %
 % Description
 %
 %     erode is a simple wrapper around imerode that handles nans.
 %
-% See also: IMDILATE
+% Input arguments
 %
+%     DEM     GRIDobj
+%     SE      structuring element. Default is ones(3).
 %
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 6. February, 2013
+% Output arguments
+%
+%     DEMe    GRIDobj
+%
+% See also: imerode, GRIDobj/dilate
+%
+% Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+% Date: 10. December, 2024
 
+arguments
+    DEM  GRIDobj
+    SE   = ones(3)
+end
 
 if isa(DEM.Z,'double') || isa(DEM.Z,'single')
     I = isnan(DEM.Z);

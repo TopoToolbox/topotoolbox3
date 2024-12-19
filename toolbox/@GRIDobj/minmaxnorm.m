@@ -1,6 +1,6 @@
 function A = minmaxnorm(A,prcclip)
 
-%MINMAXNORM min-max normalization with optional percent clipping
+%MINMAXNORM Min-max normalization with optional percent clipping
 %
 % Syntax
 %
@@ -26,28 +26,48 @@ function A = minmaxnorm(A,prcclip)
 % See also: normalize, GRIDobj/zscore
 % 
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 3. June, 2024
+% Date: 11. December, 2024
+
+arguments
+    A  GRIDobj
+    prcclip {mustBeNumeric,mustBeInRange(prcclip,0,100)} = 2
+end
 
 if nargin == 1
     minz = min(A);
     maxz = max(A);
     A = (A - minz)/(maxz-minz);
 else
-    Z = A.Z;
-    
-    qclip = prcclip/100;
-    [n,edges] = histcounts(Z(~isnan(Z(:))),'Normalization','cdf');
-    lval = edges(find(n>=qclip,1,'first'));
-    uval = edges(find(n<(1-qclip),1,'last'));
-    if lval == uval
-        warning('TopoToolbox:minmaxnorm','percent clip returns flat matrix');
-        Z(:,:) = lval;
+
+    if isscalar(prcclip)
+        prclow = prcclip;
+        prchigh = 1-prclow;
     else
-        Z = max(Z,lval);
-        Z = min(Z,uval);
+        validateattributes(prcclip,{'numeric'},{'increasing'},...
+            "minmaxnorm","prcclip",2)
+        prclow = prcclip(1);
+        prchigh = prcclip(2);
+    end
+
+    qlow  = prclow/100;
+    qhigh = prchigh/100;
+
+    Z = A.Z;
+    I = ~isnan(Z);
+
+    [n,edges] = histcounts(Z(I(:)),'Normalization','cdf');
+    lval = edges(find(n>=qlow,1,'first'));
+    uval = edges(find(n<qhigh,1,'last'));
+
+    if lval == uval
+        warning('TopoToolbox:minmaxnorm','The returned matrix is flat.');
+        Z(I) = lval;
+    else
+        Z(I) = max(Z(I),lval);
+        Z(I) = min(Z(I),uval);
+        Z(I) = (Z(I)-lval)/(uval-lval);
     end
     
-    Z = (Z-lval)/(uval-lval);
     A.Z = Z;
     
 end

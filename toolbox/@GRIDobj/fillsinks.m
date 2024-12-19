@@ -100,8 +100,8 @@ if (nargin == 1 || nargin >= 3) && uselibtt
     % Use libtopotoolbox
     dem = single(dem); % requires dem to be single
     bc = ones(size(dem), 'uint8');
-    bc(2:end-1, 2:end-1) = 0;
-    bc(Inan) = 1;
+    bc(2:end-1, 2:end-1) = uint8(0);
+    bc(Inan) = uint8(1);
     demfs = tt_fillsinks(dem, bc);
 
 elseif  nargin == 1

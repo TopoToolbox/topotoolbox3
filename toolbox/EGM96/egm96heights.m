@@ -1,6 +1,6 @@
 function DEM = egm96heights(DEM)
 
-%EGM96HEIGHTS read and resample EGM96 geoid heights
+%EGM96HEIGHTS Read and resample EGM96 geoid heights
 %
 % Syntax
 %

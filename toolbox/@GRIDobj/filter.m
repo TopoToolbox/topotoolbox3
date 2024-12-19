@@ -1,4 +1,4 @@
-function DEM = filter(DEM,varargin)
+function DEM = filter(DEM,method,ws)
 
 %FILTER 2D-filtering of DEMs with different kernels 
 %
@@ -12,7 +12,7 @@ function DEM = filter(DEM,varargin)
 %
 %     The function filter is a wrapper around various image filtering
 %     algorithms including mean, sobel, median etc. So far, only filters
-%     with rectangular kernels are supported.
+%     with rectangular kernels are supported. 
 %
 % Input
 %
@@ -30,34 +30,19 @@ function DEM = filter(DEM,varargin)
 %     DEMf = filter(DEM,'wiener',[11 11]);
 %     imageschs(DEM,DEM-DEMf)
 %     
-% 
 % See also: CONV2, FILTER2, MEDFILT2, WIENER2
 %
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
-% Date: 26. August, 2020
+% Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
+% Date: 18. December, 2024
 
-
-
-validmethods = {'mean','average','median',...
+arguments
+    DEM
+    method {mustBeMember(method,{'mean','average','median',...
                 'sobel','scharr','wiener',...
-                'std'};
-
-% Parse inputs
-p = inputParser;
-p.StructExpand  = true;
-p.KeepUnmatched = false;
-p.FunctionName = 'filter'; 
-addRequired(p,'DEM',@(x) isequal(class(x),'GRIDobj'));
-addOptional(p,'method','mean',@(x) ischar(x));
-addOptional(p,'kernel',[3 3],@(x) isscalar(x) || (numel(x) == 2) || isempty(x));
-parse(p,DEM,varargin{:});
-
-DEM     = p.Results.DEM;
-method  = validatestring(p.Results.method,validmethods);
-ws      = p.Results.kernel;
-if isscalar(ws)
-    ws = [ws ws];
+                'std'})} = 'mean'
+    ws (1,2) {mustBePositive,mustBeInteger,mustBeOdd} = [3 3]
 end
+
 dem    = DEM.Z;
 
 % pad DEM if there are NaNs
@@ -110,6 +95,12 @@ end
 % write output
 DEM.Z = dem;
 DEM.name = [method ' filter'];
+end
 
+function mustBeOdd(n)
+    if any(mod(n,2) == 0)
+        error('Kernel size must odd in both dimensions.')
+    end
 
+end
 

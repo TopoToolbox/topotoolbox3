@@ -44,42 +44,17 @@ function [V,IX] = mapfromnal(FD,S,nal,cl)
 arguments
     FD    FLOWobj
     S     STREAMobj
-    nal   
+    nal   {mustBeGRIDobjOrNal}
     cl = 'single'
 end
 
 % If the variable nal is a GRIDobj than extract the nal
 nal = ezgetnal(S,nal);
-
-% check class
-if nargin == 3
-    cl = 'single';
-end
     
-nrnal = numel(S.x);
-nalix = (1:nrnal)';
-
-I   = STREAMobj2GRIDobj(S);
-IX  = zeros(I.size);
-IX(S.IXgrid) = nalix;
-
-ix  = FD.ix;
-ixc = FD.ixc;
-
-Z   = I.Z;
-
-for r = numel(ixc):-1:1
-    if ~(Z(ixc(r)) && Z(ix(r)))
-        IX(ix(r)) = IX(ixc(r));
-    end
-end
-
-I.Z = Z;
-
-V   = GRIDobj(I,cl);
-if isfloat(V.Z)    
-    V.Z(:,:) = nan(cl);
-end
-I   = IX~=0;
-V.Z(I) = cast(nal(IX(I)),cl);
-
+% Use propagatevaluesupstream
+IX = propagatevaluesupstream(FD,S.IXgrid,uint32(1:numel(S.IXgrid)),...
+    'fillval',zeros(1,'uint32'),'overwrite',false);
+IX = IX.Z;
+V  = GRIDobj(FD,nan(FD.size,cl));
+I  = IX>0;
+V.Z(I) = nal(IX(I));

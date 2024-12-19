@@ -34,7 +34,7 @@ function DZ = vertdistance2stream(FD,S,DEM)
 % 
 %
 % See also: FLOWobj, FLOWobj/flowdistance, FLOWobj/mapfromnal, GRIDobj, 
-%           STREAMobj
+%           STREAMobj, FLOWobj/propagatevaluesupstream
 % 
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 24. June, 2024
@@ -46,13 +46,6 @@ arguments
     DEM  GRIDobj {validatealignment(S,DEM)}
 end
 
-Z = -inf(DEM.size,'like',DEM.Z);
-Z(S.IXgrid) = DEM.Z(S.IXgrid);
-
-ix  = FD.ix;
-ixc = FD.ixc;
-for r = numel(ix):-1:1
-    Z(ix(r)) = max(Z(ix(r)),Z(ixc(r)));
-end
-DZ = DEM-Z;
+DZ = DEM - propagatevaluesupstream(FD,S.IXgrid,DEM.Z(S.IXgrid),...
+    "fillval",-inf(1,'like',DEM.Z),"overwrite",false);
 DZ.name = 'Heigt above nearest drainage';
