@@ -3,7 +3,6 @@ function plan = buildfile
     
     plan("package") = matlab.buildtool.Task( ...
         Description = "Package toolbox", ...
-        Dependencies = ["check" "test"], ...
         Actions = @packageToolbox);
 
     plan("benchmark").Dependencies = "compile";
@@ -119,6 +118,7 @@ end
 
 function docTask(~)
     oldpath = addpath(genpath("toolbox"));
+    rmpath(genpath("toolbox/docs/mlxfiles"));
     finalize = onCleanup(@()(path(oldpath)));
 
     publishtthelp2html;

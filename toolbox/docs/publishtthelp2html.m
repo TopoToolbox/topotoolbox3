@@ -41,4 +41,4 @@ end
 copyfile(fullfile(docdir,"helptoc.xml"),fullfile(docdir,"html"));
 
 % Build the search database for the documentation files
-builddocsearchdb(fullfile(docdir,'html'))
+builddocsearchdb(fullfile(docdir,'html'));

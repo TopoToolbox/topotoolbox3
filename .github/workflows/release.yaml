@@ -1,0 +1,94 @@
+name: Latest Release
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  docs:
+    name: Build docs
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: latest-including-prerelease
+          products: >-
+            Mapping_Toolbox
+            Image_Processing_Toolbox
+            Optimization_Toolbox
+            MATLAB_Coder
+      - name: Compile libtopotoolbox and MEX files
+        uses: matlab-actions/run-build@v2
+        with:
+          tasks: compile
+      - name: Build docs
+        uses: matlab-actions/run-build@v2
+        with:
+          tasks: doc
+      - name: Upload docs as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolbox-docs
+          path: toolbox/docs/html
+  package:
+    name: Package toolbox
+    needs: docs
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          products: >
+            Mapping_Toolbox
+            Image_Processing_Toolbox
+            Optimization_Toolbox
+            MATLAB_Coder
+      - name: Download created docs
+        uses: actions/download-artifact@v4
+        with:
+          name: toolbox-docs
+          path: toolbox/docs/html/
+      - name: Build package
+        uses: matlab-actions/run-build@v2
+        with:
+          tasks: compile package
+      - name: Upload toolbox as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolbox-${{ matrix.os }}-${{ matrix.release }}
+          path: release/TopoToolbox_*.mltbx
+  release:
+    name: Update release
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download compiled toolboxes
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          pattern: "toolbox-*-*"
+          merge-multiple: true
+      - name: Delete latest release if it already exists
+        run: gh release delete latest --yes --cleanup-tag
+      - name: Create release
+        run: |
+          gh release create latest --target ci-toolboxes --generate-notes --latest -F .github/latest_release.md
+      - name: Upload toolbox assets        
+        run: gh release upload --repo $GITHUB_REPOSITORY latest release/*
