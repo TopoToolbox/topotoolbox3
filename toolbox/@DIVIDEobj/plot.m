@@ -1,5 +1,5 @@
 function varargout = plot(D,varargin)
-%PLOT    plot the divide network 
+%PLOT Plot the divide network 
 %
 % Syntax
 %
@@ -32,6 +32,9 @@ function varargout = plot(D,varargin)
 %                   thresholding with values in 'limits'
 %     'limit'       min and max values for thresholding the divide network
 %                   {1e3 inf}
+%     'colormap'    If style is 'order' or 'animated', the n*3 colormap
+%                   will be used to plot the lines (default is
+%                   flipud(magmacolor))
 %
 %     Additional parameter name/value pairs for the linear "plot" function 
 %     of MATLAB can be provided, although some may not yield the expected
@@ -94,7 +97,7 @@ function varargout = plot(D,varargin)
 %     set(gca,'XTick',[],'YTick',[])
 %
 % Author: Dirk Scherler (scherler[at]gfz-potsdam.de)
-% Date: December 2018
+% Date: 7. March 2025
 
 %% Parse inputs
 p = inputParser;
@@ -104,6 +107,7 @@ addParameter(p,'minwidth',1);
 addParameter(p,'maxwidth',5);
 addParameter(p,'endpoints',[]);
 addParameter(p,'junctions',[]);
+addParameter(p,'colormap',flipud(magmacolor))
 addParameter(p,'pause',0.1);
 addParameter(p,'divlimit','distance',@(x) ischar(validatestring(x,{'distance','order','none'})));
 addParameter(p,'limit',[1e3 inf],@(x) isnumeric(x));
@@ -152,7 +156,11 @@ else
         D.(p.Results.divlimit)<=max(p.Results.limit)) | isnan(D.IX);
 end
 
-if ismember(style,{'order','animated'}) 
+if ismember(style,{'order','animated'})
+    if isempty(D.order)
+        error('TopoToolbox:plot',...
+            'D has no order. Use D = divorder(D) to add orders')
+    end
     siz = [p.Results.minwidth p.Results.maxwidth];
     do   = D.order(ix);
     uqdo = unique(do(not(isnan(do))));
@@ -160,6 +168,9 @@ if ismember(style,{'order','animated'})
     mindo = min(uqdo);
     a = (siz(2)-siz(1))/(maxdo-mindo);
     b = siz(1)-a*mindo;
+
+    % Colormap
+    rgb = num2rgb(uqdo,p.Results.colormap,[mindo maxdo]);
 end
 
 [x,y] = ind2coord(D,D.IX(ix));
@@ -200,13 +211,16 @@ switch style
         
     case 'order'
         if isempty(do)
-            error('D has no order. Use D = divorder(D) to add orders');
+            error('TopoToolbox:plot',...
+            'D has no order. Use D = divorder(D) to add orders')
+
         end
         
         hold on
         for i = length(uqdo):-1:1
             ix = do==uqdo(i);
-            h(i) = plot(x(ix),y(ix),pnpv{:},'linewidth',a.*uqdo(i)+b);
+            h(i) = plot(x(ix),y(ix),pnpv{:},'linewidth',a.*uqdo(i)+b,...
+                'color',rgb(i,:));
         end
         
     case 'animated'
@@ -219,7 +233,8 @@ switch style
         pause(p.Results.pause);
         for i = length(uqdo):-1:1
             ix = do==uqdo(i);
-            h = [h plot(x(ix),y(ix),pnpv{:},'linewidth',a.*uqdo(i)+b)];
+            h = [h plot(x(ix),y(ix),pnpv{:},'linewidth',a.*uqdo(i)+b,...
+                'color',rgb(i,:))];
             title(['order > ',num2str(i)])
             pause(p.Results.pause);
         end

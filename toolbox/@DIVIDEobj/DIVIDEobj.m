@@ -59,7 +59,7 @@ classdef DIVIDEobj
         size      % size of hypothetical GRIDobj that would place the 
                   % divide nodes into cells
         cellsize  % cellsize
-        refmat    % 3-by-2 affine transformation matrix (see makerefmat)
+        wf        % 2-by-3 affine transformation matrix
         IX        % nan-separated linear indices of divide nodes into 
                   % instance of GRIDobj
                   
@@ -77,7 +77,7 @@ classdef DIVIDEobj
     methods 
         
         function [D,varargout] = DIVIDEobj(FD,ST,varargin) 
-            %DIVIDEobj Construct an instance of this class
+            %DIVIDEobj Construct an instance of DIVIDEobj
             
             % Parse inputs
             ordschemes = {'strahler','shreve','topo'};
@@ -101,7 +101,7 @@ classdef DIVIDEobj
             hcs = FD.cellsize/2;
             D.cellsize = FD.cellsize;
             D.size = FD.size+[1 1];
-            D.refmat = FD.refmat+[0 0;0 0;-hcs,hcs];
+            D.wf = FD.wf+[0 0;0 0;-hcs,hcs]';
             
             % Create streamorder grid
             if isa(ST,'STREAMobj')
@@ -256,10 +256,10 @@ classdef DIVIDEobj
             DOUT = DIN;
             
             % Grid with nodes indicating diagonal flow
-            [x,y] = refmat2XY(FD.refmat,FD.size);
+            [x,y] = wf2XY(FD.wf,FD.size);
             cs = FD.cellsize;
             hcs = cs/2;
-            xn = [x-hcs,x(end)+hcs];
+            xn = [x'-hcs,x(end)+hcs];
             yn = [y+hcs;y(end)-hcs];
             A = zeros(FD.size+1);
             FX = GRIDobj(xn,yn,A);

@@ -28,8 +28,10 @@ function [x,y] = ind2coord(D,ix)
 %         code simply copied and help adjusted by Dirk Scherler
 % Date: 30. January, 2013 and February 2019
 
-
+% Get intrinsic coordinates
 [r,c] = ind2sub(D.size,ix(:));
-xy    = double([r c ones(numel(ix),1)])*D.refmat;
+% Calculate map coordinates
+xy    = (D.wf*double([c-1 r-1 ones(numel(ix),1)]'))';
+
 x = xy(:,1);
 y = xy(:,2);

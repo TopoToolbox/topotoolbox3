@@ -1,5 +1,5 @@
 function varargout = plotc(D,val,varargin)
-%PLOTC   Create colored plot of drainage divide network
+%PLOTC Create colored plot of drainage divide network
 %
 % Syntax
 %
@@ -10,14 +10,14 @@ function varargout = plotc(D,val,varargin)
 %
 % Description
 %
-%     PLOTC creates a colored plot of the divide network. The divide network
-%     is shown as a collection of points, one for each divide edge. The
-%     points can vary in size by the along-divide distance or by the divide
-%     order; they can vary in color by attributes provided either in form
-%     of a GRIDobj or as a list of values, with the same number of elements 
-%     as divide edges. The appearance of the colors can also be modified
-%     by using the HSV color model, in which case the saturation and
-%     'value' are linked to another GRIDobj or list of values.
+%     PLOTC creates a colored plot of the divide network. The divide
+%     network is shown as a collection of points, one for each divide edge.
+%     The points can vary in size by the along-divide distance or by the
+%     divide order; they can vary in color by attributes provided either in
+%     form of a GRIDobj or as a list of values, with the same number of
+%     elements as divide edges. The appearance of the colors can also be
+%     modified by using the HSV color model, in which case the saturation
+%     and 'value' are linked to another GRIDobj or list of values.
 %     
 % Input arguments
 %
@@ -101,15 +101,15 @@ if isa(val,'GRIDobj')
     
     switch p.Results.valuefct
         case 'mean'
-            val = nanmean([q,r],2);
+            val = mean([q,r],2,"omitmissing");
         case 'max'
-            val = nanmax([q,r],[],2);
+            val = max([q,r],[],2,"omitmissing");
         case 'min'
-            val = nanmin([q,r],[],2);
+            val = min([q,r],[],2,"omitmissing");
         case 'diff'
             val = abs(diff([q,r],1,2));
         case 'normdiff'
-            val = abs(diff([q,r],1,2))./nanmean([q,r],2);
+            val = abs(diff([q,r],1,2))./mean([q,r],2,"omitmissing");
     end
 end
 
@@ -120,15 +120,15 @@ if not(isempty(hsvdata))
 
         switch p.Results.hsvfct
             case 'mean'
-                hsvdata = nanmean([q,r],2);
+                hsvdata = mean([q,r],2,"omitmissing");
             case 'max'
-                hsvdata = nanmax([q,r],[],2);
+                hsvdata = max([q,r],[],2,"omitmissing");
             case 'min'
-                hsvdata = nanmin([q,r],[],2);
+                hsvdata = min([q,r],[],2,"omitmissing");
             case 'diff'
                 hsvdata = abs(diff([q,r],1,2));
             case 'normdiff'
-                hsvdata = abs(diff([q,r],1,2))./nanmean([q,r],2);
+                hsvdata = abs(diff([q,r],1,2))./mean([q,r],2,'omitmissing');
         end
     end    
 end
@@ -204,9 +204,6 @@ end
 if nargout==1
     varargout{1} = h;
 end
-
-
-
 
 end
 

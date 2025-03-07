@@ -1,5 +1,5 @@
-function varargout = getvalue(D,GRID,varargin)
-%GETVALUE    get grid values adjacent to divides
+function varargout = getvalue(D,GRID,fct)
+%GETVALUE Get grid values adjacent to divides
 %
 % Syntax
 % 
@@ -52,6 +52,12 @@ function varargout = getvalue(D,GRID,varargin)
 % Author: Dirk Scherler (scherler[at]gfz-potsdam.de)
 % Date: December 2018
 
+arguments
+    D   DIVIDEobj
+    GRID GRIDobj
+    fct {mustBeMember(fct,{'min','max','mean','diff','normdiff'})} = 'mean' 
+end
+
 
 % Get vectors 
 [x,y] = ind2coord(D,vertcat(D.IX));
@@ -83,23 +89,17 @@ p(nx) = GRID.Z(pix(nx));
 q(nx) = GRID.Z(qix(nx));
 
 if nargout==1
-    if nargin==3
-        fct = validatestring(varargin{1},...
-            {'min','max','mean','diff','normdiff'});
-    else
-        fct = 'mean';
-    end
     switch fct
         case 'mean'
-            val = nanmean([p,q],2);
+            val = mean([p,q],2,"omitmissing");
         case 'max'
-            val = nanmax([p,q],[],2);
+            val = max([p,q],[],2,"omitmissing");
         case 'min'
-            val = nanmin([p,q],[],2);
+            val = min([p,q],[],2,"omitmissing");
         case 'diff'
             val = abs(diff([p,q],1,2));
         case 'normdiff'
-            val = abs(diff([p,q],1,2))./nansum([p,q],2);
+            val = abs(diff([p,q],1,2))./mean([p,q],2,"omitmissing");
     end
     varargout{1} = val;
 else

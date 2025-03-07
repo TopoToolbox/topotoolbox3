@@ -1,5 +1,5 @@
 function [J,varargout] = jctangle(D,varargin)
-%JCTANGLE   angles between divide segments at junctions
+%JCTANGLE Angles between divide segments at junctions
 %
 % Syntax
 %
@@ -119,7 +119,7 @@ end
 
 
 % Get angle data
-[x,y] = refmat2XY(D.refmat,D.size);
+[x,y] = wf2XY(D.wf,D.size);
 [X,Y] = meshgrid(x,y);
 
 L = struct; ct = 0;

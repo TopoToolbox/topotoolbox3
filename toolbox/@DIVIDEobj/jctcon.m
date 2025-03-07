@@ -1,5 +1,5 @@
 function [CJ,varargout] = jctcon(D,varargin)
-%JCTCON        compute junction connectivity
+%JCTCON  Compute junction connectivity
 %
 % Syntax
 %

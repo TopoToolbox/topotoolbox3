@@ -107,7 +107,10 @@ switch lower(type)
         end
         
     case 'shreve'
-        S = streampoi(FD,W,'channelheads');
+        % S = streampoi(FD,W,'channelheads');
+        I = W(FD.ixc) & (~W(FD.ix));
+        S = GRIDobj(FD,'logical');
+        S.Z(FD.ixc(I)) = true;
         S = flowacc(FD,S);
         S = uint16(S.Z);
         S(~W) = 0;
