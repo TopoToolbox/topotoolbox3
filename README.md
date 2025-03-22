@@ -22,6 +22,54 @@ TopoToolbox v3 is plat-form independent and requires **MATLAB R2023b or higher**
 
 If you are using an older version of MATLAB (< R2023b), use [TopoToolbox 2](https://github.com/topoToolbox/topotoolbox).
 
+## Installation
+
+### Download release and install
+
+The easiest way to get started with TopoToolbox 3 is to download the `topotoolbox.mltbx` file from the [GitHub repository releases area](https://github.com/TopoToolbox/topotoolbox3/releases). Double-click on the downloaded file to run the MATLAB add-on installer. This will copy the files to your MATLAB add-ons area and add `TopoToolbox` to your MATLAB search path.
+
+Later, you can use the [MATLAB Add-On Manager](https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html) to uninstall.
+
+As a developer, we recommend to fork and clone the [TopoToolbox3 GitHub repository](https://github.com/TopoToolbox/topotoolbox3). Start by navigating to the [original repository on GitHub](https://github.com/TopoToolbox/topotoolbox3) and clicking the Fork button in the top right. This creates a copy of the repository in your own GitHub account. Next, clone the forked repository to your computer. Please read [the contributor guidelines](http://blank) more about how to contribute code to TopoToolbox.
+
+### Download code
+
+Alternatively, you can download the repository and save it to some folder on your harddrive. Before working with TopoToolbox the directories and functions must be on the search path of MATLAB. To do this, navigate your working directory to the `topotoolbox3/toolbox` folder and run the command:
+
+		tt2path
+
+To make these paths permanent, use the command (this may require system administrator privileges).
+
+		savepath
+
+The documentation will not be included in the code. To build the documentation, go to the folder `docs` and run the command
+
+		publishtthelp2html
+
+This will build html-files that can be viewed in MATLABs documentation. You'll find the TopoToolbox documentation in the section Supplemental Software, once you restart MATLAB. The documentation contains several user's guides that will help you getting started. In addition, TopoToolbox functions have extensive help sections (e.g. `help gradient8` or `help STREAMobj/modify`. An additional resource for code and examples is the [TopoToolbox blog](http://topotoolbox.wordpress.com).
+
+Finally, TopoToolbox comes with bindings to libtopotoolbox, a C-library for terrain analysis. Currently, all TopoToolbox functions will work also without libtopotoolbox. To compile libtopotoolbox, navigate to the `topotoolbox3`-folder and run the command
+
+		buildtool compile
+
+To check whether compilation ran successfully, the following command
+
+		haslibtopotoolbox
+
+should return `true`.
+
+## Getting started
+
+Once you have TopoToolbox installed, you should get started with reading a DEM into a GRIDobj, the numerical class containing single-band raster datasets. TopoToolbox comes with an example file which you can read using the following command.
+
+		DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
+
+Now plot this data using `imageschs`.
+
+		imageschs(DEM)
+
+Well done. If this works, your TopoToolbox installation should run. Now, check what TopoToolbox has to offer and open the `gettingStarted.mlx` file which is found in the `toolbox` folder. 
+
 ## References
 
 When you use TopoToolbox in your work, please reference following 
@@ -82,41 +130,6 @@ Earth Surface Dynamics, 8, 261-274. [DOI: 10.5194/esurf-8-261-2020](http://dx.do
 - Schwanghart, W., Molkenthin, C., & Scherler, D. (2020). A systematic approach and software for the analysis 
 of point patterns on river networks. Earth Surface Processes and Landforms, 46, 9, 1847-1862. [DOI: 10.1002/esp.5127](http://dx.doi.org/10.1002/esp.5127)
 
-## Installation
-
-### Download release and install
-
-The easiest way to get started with TopoToolbox 3 is to download the `topotoolbox.mltbx` file from the [GitHub repository releases area](https://github.com/TopoToolbox/topotoolbox3/releases). Double-click on the downloaded file to run the MATLAB add-on installer. This will copy the files to your MATLAB add-ons area and add `TopoToolbox` to your MATLAB search path.
-
-Later, you can use the [MATLAB Add-On Manager](https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html) to uninstall.
-
-As a developer, we recommend to fork and clone the [TopoToolbox3 GitHub repository](https://github.com/TopoToolbox/topotoolbox3). Start by navigating to the [original repository on GitHub](https://github.com/TopoToolbox/topotoolbox3) and clicking the Fork button in the top right. This creates a copy of the repository in your own GitHub account. Next, clone the forked repository to your computer. Please read [the contributor guidelines](http://blank) more about how to contribute code to TopoToolbox.
-
-### Download code
-
-Alternatively, you can download the repository and save it to some folder on your harddrive. Before working with TopoToolbox the directories and functions must be on the search path of MATLAB. To do this, navigate your working directory to the `topotoolbox3/toolbox` folder and run the command:
-
-		tt2path
-
-To make these paths permanent, use the command (this may require system administrator privileges).
-
-		savepath
-
-The documentation will not be included in the code. To build the documentation, go to the folder `docs` and run the command
-
-		publishtthelp2html
-
-This will build html-files that can be viewed in MATLABs documentation. You'll find the TopoToolbox documentation in the section Supplemental Software, once you restart MATLAB. The documentation contains several user's guides that will help you getting started. In addition, TopoToolbox functions have extensive help sections (e.g. `help gradient8` or `help STREAMobj/modify`. An additional resource for code and examples is the [TopoToolbox blog](http://topotoolbox.wordpress.com).
-
-Finally, TopoToolbox comes with bindings to libtopotoolbox, a C-library for terrain analysis. Currently, all TopoToolbox functions will work also without libtopotoolbox. To compile libtopotoolbox, navigate to the `topotoolbox3`-folder and run the command
-
-		buildtool compile
-
-To check whether compilation ran successfully, the following command
-
-		haslibtopotoolbox
-
-should return `true`.
 
 ***
 ## Version History

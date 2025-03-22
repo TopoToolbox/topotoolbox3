@@ -1,4 +1,4 @@
-function varargout = contour(DEM,varargin)
+function varargout = contour(DEM,n)
 
 %CONTOUR Contour plot of an instance of GRIDobj
 %
@@ -40,16 +40,20 @@ function varargout = contour(DEM,varargin)
 % See also: GRIDobj, GRIDobj/imageschs, GRIDobj/griddedcontour, contourc
 % 
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 17. October, 2024
+% Date: 20. March, 2025
 
+arguments
+    DEM  GRIDobj
+    n    {mustBeNumeric} = 10
+end
 
 [Z,x,y] = GRIDobj2mat(DEM);
 if nargout == 0   
-    contour(x,y,double(Z),varargin{:});
+    contour(x,y,double(Z),n);
     return
 end
 
-c = contourc(double(x),double(y),double(Z),double(varargin{:}));
+c = contourc(double(x),double(y),double(Z),double(n));
 IXs = 2;
 counter = 1;
 while IXs(counter) < size(c,2)

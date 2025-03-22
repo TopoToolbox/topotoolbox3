@@ -1,4 +1,4 @@
-function [x,y] = shape2nanpunctuatedcoords(inp,options)
+function [x,y,ix] = shape2nanpunctuatedcoords(inp,options)
 
 %SHAPE2NANPUNCTUATEDCOORDS Mapstruct or geotable with lines to vectors
 %
@@ -7,6 +7,7 @@ function [x,y] = shape2nanpunctuatedcoords(inp,options)
 %     [x,y] = shape2nanpunctuatedcoords(MS or GT)
 %     [x,y] = shape2nanpunctuatedcoords(...,coords = ["X" "Y"])
 %     [x,y] = shape2nanpunctuatedcoords(...,coords = ["Lon" "Lat"])
+%     [x,y,ix] = ...
 %
 % Description
 %
@@ -23,11 +24,17 @@ function [x,y] = shape2nanpunctuatedcoords(inp,options)
 %     'coords'   Two element vector of strings for the x and y-coordinate
 %                field in MS.
 %
+% Output arguments
+%
+%     x,y      nan-punctuated coordinate vectors
+%     ix       linear index for each coordinate pair to reference back into
+%              MS or GT. 
+%
 %
 % See also: mapstruct2geotable
 %
 % Author: Wolfgang Schwanghart (schwangh@uni-potsdam.de)
-% Date: 13. March, 2025
+% Date: 20. March, 2025
 
 % Argument checking
 arguments 
@@ -71,6 +78,12 @@ end
 x = vertcat(x{:});
 y = vertcat(y{:});
 
+if nargout == 3
+    I  = isnan(x);
+    ix = circshift(I,1);
+    ix = cumsum(ix);
+    ix(I) = nan;
+end
 end
 
 %% ---- subfunctions

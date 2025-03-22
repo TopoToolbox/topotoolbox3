@@ -73,19 +73,34 @@ classdef GRIDobj
 %     referencing) inherited from another instance of a FLOWobj, GRIDobj 
 %     or STREAMobj class. The second input argument Z is written to DEM.Z.
 %
-% Example
+% Example 1: Load a DEM
 %
-%     % Load DEM
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
-%     % Display DEM
+%     % Display a hillshade of the DEM
 %     imageschs(DEM)
+%
+% Example 2: Create a global grid in geographic coordinates
+%
+%     R = georefcells([-90 90],[-180 180],2,2);
+%     R.GeographicCRS = parseCRS(4326);
+%     G = GRIDobj(zeros(R.RasterSize),R);
+%     G = egm96heights(G);
+%     surf(G);
+%     exaggerate(gca,0.1);
+%     colormap(ttscm('roma'));
+%     caxis([-100 100])
+%     camlight; material dull
+%
+% Example 3: Create a new GRIDobj filled with ones
+%
+%     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
+%     Z   = GRIDobj(DEM) + 1;
 %
 % See also: FLOWobj, STREAMobj, GRIDobj/info, readgeoraster.
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 31. August, 2024
-
-    
+% Date: 19. March, 2025
+   
     properties
         %Public properties
         
@@ -222,7 +237,7 @@ classdef GRIDobj
 
                         % check whether size of Z is same as in referencing
                         % object
-                        tf = isequal(size(Z),R.RasterSize);
+                        tf = sizesMatch(R,Z);
                         assert(tf,"Array size of first argument and referencing matrix differs.")
 
                     end
