@@ -41,12 +41,17 @@ classdef ScaleBar < handle
 %                    'southwest','northeast', or 'northwest'.
 %     'backgroundcolor'   background color of the text box {'none'}.
 %     'fontsize'     Fontsize {10}
+%     'isgeo'        {false} or true. If true, x and y axes must represent
+%                    degree longitude and latitude, and the scale bar
+%                    represents metric distance.
+%     'ellipsoid'    Only relevant if isgeo = true. Default is wgsellipsoid
+%                    (function requires mapping toolbox).
 %
 % Output arguments
 %
 %     SB     handle to scale bar
 %
-% Example
+% Example 1
 %
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
 %     imageschs(DEM)
@@ -55,11 +60,21 @@ classdef ScaleBar < handle
 %     SB.color = 'w';
 %     smaller(SB,2)
 %
+% Example 2
+%
+%     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
+%     % Inverse projection to geographic coordinates
+%     DEMll = project(DEM,4326,'res',0.0008);
+%     DEMll = largestinscribedgrid(DEMll);
+%     imageschs(DEMll)
+%     adjustgeoaspectratio
+%     SB = ScaleBar('isgeo',true,'displayunit','auto');
+%
 % References: The function uses plotboxpos by Kelly Kearney. The function
 % is available here: https://github.com/kakearney/plotboxpos-pkg
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 4. November 2024
+% Date: 25. March 2025
 
     properties(SetAccess = 'private')
         scale
@@ -72,10 +87,12 @@ classdef ScaleBar < handle
         color       = 'k'
         displayunit = 'auto'
         xyunit      = 'm'
-        rellength   = 0.2;
+        rellength   = 0.2
         location    = 'southeast'
         backgroundcolor = 'none'
-        fontsize    = 10;        
+        fontsize    = 10;  
+        isgeo       = false
+        ellipsoid   = wgs84Ellipsoid('m')
     end
     
     methods
@@ -86,6 +103,8 @@ classdef ScaleBar < handle
                 options.parent {mustBeA(options.parent,'matlab.graphics.axis.Axes')} = gca
                 options.xyunit = 'm'
                 options.displayunit = 'auto'
+                options.isgeo = false
+                options.ellipsoid = wgs84Ellipsoid()
                 options.color = 'k'
                 options.rellength (1,1) {mustBeNumeric,mustBePositive} = 0.2
                 options.backgroundcolor = 'none'
@@ -118,11 +137,14 @@ classdef ScaleBar < handle
             SB.displayunit = params.displayunit;
             SB.location  = params.location;
             SB.rellength = params.rellength;
+            SB.isgeo  = params.isgeo;
+            SB.ellipsoid = params.ellipsoid;
             
             %% Create listeners
             hfig = SB.ax.Parent;
             SB.el = addlistener(SB.ax,{'XLim','YLim', 'Position', 'OuterPosition'},'PostSet',@(src,evnt)placescalebar(SB));
-            hfig.SizeChangedFcn = @(src,evnt) placescalebar(SB);    
+            hfig.SizeChangedFcn = @(src,evnt) placescalebar(SB);
+            placescalebar(SB)
         end
         
         function set.color(SB,c)
@@ -224,7 +246,7 @@ classdef ScaleBar < handle
             % find nearest value
             [~,ix] = min(abs(sblengthvalues-sblength));
             sblength = sblengthvalues(ix);
-            
+          
             switch SB.xyunit
                 case 'none'
                     sblengthtext = num2str(sblength);
@@ -307,10 +329,79 @@ classdef ScaleBar < handle
             SB.scaletext.String = sblengthtext;
             
             SB.ax.Units = units_former;
-                       
-        end
-        
-        
+
+            if SB.isgeo
+                % Step 1: Get the annotation line position
+                % This is in normalized figure coordinates: [x1 y1 x2 y2]
+                xAnn = SB.scale.X;  % [x1 x2] in normalized figure units
+                yAnn = SB.scale.Y;  % [y1 y2] in normalized figure units
+
+                % Step 2: Get axis position in normalized figure coordinates
+                axPos = plotboxpos(SB.ax);  % [x y width height] (normalized to figure)
+
+                % Step 3: Get axis limits
+                xLimits = SB.ax.XLim;
+                yLimits = SB.ax.YLim;
+
+                % Step 4: Convert annotation coordinates to axis-relative normalized coordinates
+                xRel = (xAnn - axPos(1)) / axPos(3);  % Now in [0, 1] relative to axis
+                yRel = (yAnn - axPos(2)) / axPos(4);
+
+                % Step 5: Map to data coordinates
+                xData = xLimits(1) + xRel * (xLimits(2) - xLimits(1));
+                yData = yLimits(1) + yRel * (yLimits(2) - yLimits(1));
+                
+                if any(abs(yData)>=90)
+                    SB.scaletext.String = 'NaN';
+                    
+                else
+
+                sblength     = distance(yData(1),xData(1),yData(2),xData(2),SB.ellipsoid,'degrees');
+                sblength     = sblength/1000; % --> 'km'
+
+                sblengthvalues = [0.1 0.25 .5 1] * 10.^(ceil(log10(sblength)));
+                [~,ix] = min(abs(sblengthvalues-sblength));
+                sblengthtarget = sblengthvalues(ix);
+
+                % adjust length of the scalebar
+                fr = sblengthtarget / sblength;
+
+                % nearest values
+                switch SB.location
+                    case {'southeast','northeast'}
+                        SB.scale.X = sort(SB.scale.X);
+                        SB.scale.X(1) = SB.scale.X(1) - (fr-1)*diff(SB.scale.X);  
+                    case {'northwest','southwest'}
+                        SB.scale.X = sort(SB.scale.X);
+                        SB.scale.X(2) = SB.scale.X(2) + (fr-1)*diff(SB.scale.X); 
+
+                end
+
+
+                sblength = sblengthtarget;
+                switch SB.displayunit
+                    case 'm'
+                        sblengthtext = [num2str(sblength*1000) ' m'];
+                    case 'km'
+                        sblengthtext = [num2str(sblength) ' km'];
+                    case 'auto'
+                        if sblength > 1
+                            sblengthtext = [num2str(sblength) ' km'];
+                        else
+                            sblengthtext = [num2str(sblength*1000) ' m'];
+                        end
+                    case 'none'
+                        sblengthtext = num2str(sblength);
+                end
+
+                SB.scaletext.String = sblengthtext;
+
+                SB.scaletext.Position = [SB.scale.X(1) y(1) diff(SB.scale.X) textheight];
+                end
+
+            end
+                    
+        end 
     end
 
 end
