@@ -50,4 +50,4 @@ jobs:
       - name: Run checks and tests
         uses: matlab-actions/run-build@v2
         with:
-          tasks: compile check test
+          tasks: compile check test(useGraphics=false)

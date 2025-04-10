@@ -6,12 +6,17 @@ classdef testFLOWobj < matlab.unittest.TestCase
         currentFolder = pwd
         tempFolder = fullfile(tempdir,'tt3_testdir')
     end
+
+    properties(ClassSetupParameter)
+        graphics = {true};
+    end
+
     properties (TestParameter)
         files = {'kedarnath','kunashiri','perfectworld','taalvolcano','tibet'};
     end
 
     methods (TestClassSetup)
-        function readFiles(testCase) 
+        function readFiles(testCase, graphics)
 
             % Create a folder in the temporary directory
             if ~exist(testCase.tempFolder,"file")
@@ -45,10 +50,10 @@ classdef testFLOWobj < matlab.unittest.TestCase
     end
 
     % Tests start here ---------------------------------------------------
-    methods (Test, ParameterCombination = 'sequential')
+    methods (Test, ParameterCombination = 'exhaustive')
         % Test methods
 
-        function create_FLOWobj(testCase,files)
+        function create_FLOWobj(testCase, files, graphics)
 				
             % Read example DEM
             fn  = fullfile(testCase.tempFolder,[files '.tif']);
@@ -56,7 +61,9 @@ classdef testFLOWobj < matlab.unittest.TestCase
             
             FD  = FLOWobj(DEM,'multi');
             A   = flowacc(FD);
-            figure; imagesc(log(A)); pause(2); close
+            if graphics
+                figure; imagesc(log(A)); pause(2); close
+            end
             verifyInstanceOf(testCase,FD,'FLOWobj')
         end
 

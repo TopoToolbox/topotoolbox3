@@ -41,11 +41,19 @@ function checkTask(~)
     assert(isempty(errors));
 end
 
-function testTask(~)
+function testTask(~, options)
+arguments
+    ~
+    options.useGraphics logical = true;
+end
     oldpath = addpath(genpath("toolbox"));
     finalize = onCleanup(@()(path(oldpath)));
 
-    results = runtests("tests","IncludeSubfolders",true);
+    P = matlab.unittest.parameters.Parameter.fromData('graphics', ...
+        {options.useGraphics});
+    suite = matlab.unittest.TestSuite.fromFolder("tests", ...
+        "IncludingSubfolders",true,"ExternalParameters",P);
+    results = run(suite);
     disp(results);
     assertSuccess(results);
 end
