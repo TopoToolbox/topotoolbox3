@@ -41,7 +41,7 @@ function c = cumsum(S,c,direction,cl)
 arguments
     S  STREAMobj
     c {mustBeGRIDobjOrNal(c,S)}
-    direction {mustBeMember(direction,'upstream','downstream')} = 'downstream'
+    direction {mustBeMember(direction,{'upstream','downstream'})} = 'downstream'
     cl = 'double'
 end
 

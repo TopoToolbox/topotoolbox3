@@ -75,7 +75,7 @@ function results = mnoptimkp(P,FD,options)
 % Example
 %
 %      DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
-%      FD  = FLOWobj(DEM,'preprocess','c');
+%      FD  = FLOWobj(DEM);
 %      S = STREAMobj(FD,'minarea',1000);
 %      S = klargestconncomps(S,1);
 %     
@@ -92,6 +92,11 @@ function results = mnoptimkp(P,FD,options)
 %                          't',1e6,'mn0',0.5,...
 %                          'sigmat',1e5);
 %
+%      plotdz(P,'distance',results.chi)
+%      yyaxis right
+%      plotdz(S,results.int,'distance',results.chi)
+%      ylabel('Density')
+%      xlabel('\chi')
 %
 % See also: PPS, knickpointfinder, STREAMobj/mnoptim, STREAMobj/mnoptimvar
 %  

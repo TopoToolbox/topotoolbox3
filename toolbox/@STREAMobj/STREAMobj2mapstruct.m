@@ -92,6 +92,8 @@ function [GS,x,y] = STREAMobj2mapstruct(S,varargin)
 %      'latlon'     {false} or true. If true, the function will attempt to
 %                   transform coordinates to geographic coordinates. This
 %                   works only if S contains a valid projection. 
+%      'ixsplit'    linear index of locations where the network should be
+%                   split into features. 
 %     
 % Output arguments
 %
@@ -102,7 +104,7 @@ function [GS,x,y] = STREAMobj2mapstruct(S,varargin)
 % Example
 %
 %     DEM = GRIDobj('srtm_bigtujunga30m_utm11.tif');
-%     FD  = FLOWobj(DEM,'preprocess','c');
+%     FD  = FLOWobj(DEM);
 %     A = flowacc(FD);
 %     S = STREAMobj(FD,A>1000);
 %     DEM = imposemin(FD,DEM);
@@ -115,7 +117,7 @@ function [GS,x,y] = STREAMobj2mapstruct(S,varargin)
 % See also: shapewrite, STREAMobj2XY, STREAMobj2geotable
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 6. November, 2024
+% Date: 23. June, 2025
 
 if nargin == 1
     type = 'strahler';
@@ -201,6 +203,7 @@ else
     addParameter(p,'checkattributes',true,@(x) isscalar(x))
     addParameter(p,'parallel',false)
     addParameter(p,'latlon',false)
+    addParameter(p,'ixsplit',[])
     parse(p,S,varargin{:});
     
     % check the attributes
@@ -212,7 +215,15 @@ else
 
     runinpar     = p.Results.parallel;
     seglength    = p.Results.seglength;
+    ixsplit      = p.Results.ixsplit;
     
+    % Remove split locations on outlets or channelheads because these will
+    % lead to empty linestrings.
+    if ~isempty(ixsplit)
+        ixsplit(ismember(ixsplit,streampoi(S,{'chan','outl'},'ix'))) = [];
+    end
+
+
     % make valid and unique field names if required
     if p.Results.checkattributes
         attributes(1:3:end) = matlab.lang.makeValidName(attributes(1:3:end));
@@ -263,7 +274,8 @@ else
         parfor r = 1:numel(CS)            
             GS{r} = STREAMobj2mapstruct(CS{r},'seglength',seglength,...
                                                 'attributes',CATT(r,:),...
-                                                'parallel',false);
+                                                'parallel',false,...
+                                                'ixsplit',ixsplit);
         end
         
         GS = vertcat(GS{:});
@@ -280,6 +292,12 @@ else
     
     % write stream segments
     confluences = streampoi(S,'confl','logical');
+    
+    if ~isempty(ixsplit)
+        splitnal = ismember(S.IXgrid,ixsplit);
+        confluences(splitnal) = true;
+    end
+
     
     % preallocate cell array with attributes
     attr = cell(1,nrattributes);

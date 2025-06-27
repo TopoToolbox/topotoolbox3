@@ -30,6 +30,8 @@ function GT = STREAMobj2geotable(S,options)
 %     'attributes'  cell array with attribute data (see STREAMobj2mapstruct
 %                   for details). These data will be aggregated to feature
 %                   properties. 
+%     'ixsplit'     linear index of locations where the network should be
+%                   split into features. 
 %
 % Output arguments
 %
@@ -53,19 +55,20 @@ function GT = STREAMobj2geotable(S,options)
 % See also: STREAMobj2mapstruct
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 13. June, 2024
+% Date: 23. June, 2025
 
 arguments
     S   STREAMobj
     options.type {mustBeMember(options.type,{'geo','map'})} = 'map'
     options.seglength (1,1) {mustBePositive} = max(max(S.distance)/20,5*S.cellsize)
     options.attributes {mustBeA(options.attributes,'cell')} = {}
+    options.ixsplit = []
 end
 
 
 % Calculate mapping structure
 GT = STREAMobj2mapstruct(S,'seglength',options.seglength,...
-    'attributes',options.attributes);
+    'attributes',options.attributes,'ixsplit',options.ixsplit);
 
 if isProjected(S)
     proj = S.georef.ProjectedCRS;
