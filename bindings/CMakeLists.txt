@@ -80,9 +80,18 @@ matlab_add_mex(
   LINK_TO topotoolbox
 )
 
+matlab_add_mex(
+  NAME tt_gradient8
+  MODULE
+  SRC tt_gradient8.c
+  R2018a
+  LINK_TO topotoolbox
+)
+
 install(
   TARGETS tt_has_topotoolbox tt_fillsinks tt_identifyflats tt_gwdt_computecosts
           tt_lowerenv tt_hillshade tt_hillshade_fused tt_graphflood
+          tt_gradient8
   DESTINATION "."
   COMPONENT Runtime
 )

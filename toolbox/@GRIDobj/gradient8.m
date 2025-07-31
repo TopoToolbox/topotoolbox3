@@ -30,6 +30,7 @@ function G = gradient8(DEM,unit,options)
 %                       (see function blockproc)
 %     'useparallel'     true or {false}: use parallel computing toolbox
 %     'blocksize'       blocksize for blockproc (default: 5000)
+%     'uselibtt'        true or {false}
 % 
 % Output
 %
@@ -54,7 +55,7 @@ function G = gradient8(DEM,unit,options)
 % See also: GRIDobj, GRIDobj/CURVATURE, GRIDobj/ASPECT, GRIDobj/arcslope
 % 
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 6. June, 2024
+% Date: 31. July, 2024
 
 arguments
     DEM   GRIDobj
@@ -62,45 +63,51 @@ arguments
     options.useblockproc (1,1) = false
     options.blocksize (1,1) = 5000
     options.useparallel (1,1) = false
+    options.uselibtt (1,1) = false
 end
 
-
-% create a copy of the DEM instance
-G = DEM;
-c = class(DEM.Z);
-switch c
-    case 'double'
-        G.Z = double.empty(0,0);
-    otherwise
-        G.Z = single.empty(0,0);
-        c   = 'single';
-end
-
-% I found Large matrix support using blockproc inefficient for gradient8.
-% Matrix dimensions have thus been increased to an out-of-range value to
-% avoid calling blockproc.
-% Large matrix support. Break calculations in chunks using blockproc.
-
-if options.useblockproc
-    blksiz = bestblk(size(DEM.Z),options.blocksize);
-    c   = class(DEM.Z);
-    
-    switch c
-        case {'double', 'single'}
-            padval = inf;
-        case 'logical'
-            padval = true;
-        otherwise
-            padval = intmax(c);
-    end
-    cs  = G.cellsize;
-    fun = @(x) steepestgradient(x,cs,c);
-    G.Z = blockproc(DEM.Z,blksiz,fun,...
-           'BorderSize',[1 1],...
-           'Padmethod',padval,...
-           'UseParallel',options.useparallel);
+if options.uselibtt && haslibtopotoolbox
+    G = GRIDobj(DEM,tt_gradient8(...
+        single(DEM.Z),single(DEM.cellsize),true));
 else
-    G.Z = steepestgradient(DEM.Z,G.cellsize,c);
+
+    % create a copy of the DEM instance
+    G = DEM;
+    c = class(DEM.Z);
+    switch c
+        case 'double'
+            G.Z = double.empty(0,0);
+        otherwise
+            G.Z = single.empty(0,0);
+            c   = 'single';
+    end
+
+    % I found Large matrix support using blockproc inefficient for gradient8.
+    % Matrix dimensions have thus been increased to an out-of-range value to
+    % avoid calling blockproc.
+    % Large matrix support. Break calculations in chunks using blockproc.
+
+    if options.useblockproc
+        blksiz = bestblk(size(DEM.Z),options.blocksize);
+        c   = class(DEM.Z);
+
+        switch c
+            case {'double', 'single'}
+                padval = inf;
+            case 'logical'
+                padval = true;
+            otherwise
+                padval = intmax(c);
+        end
+        cs  = G.cellsize;
+        fun = @(x) steepestgradient(x,cs,c);
+        G.Z = blockproc(DEM.Z,blksiz,fun,...
+            'BorderSize',[1 1],...
+            'Padmethod',padval,...
+            'UseParallel',options.useparallel);
+    else
+        G.Z = steepestgradient(DEM.Z,G.cellsize,c);
+    end
 end
 
 G.name = 'gradient';
