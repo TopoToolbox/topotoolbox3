@@ -70,19 +70,38 @@ if ~isa(target,'GRIDobj')
     if isProjected(DEM)
         scale = DEM.cellsize / target;
         [B,RB] = mapresize(DEM.Z,DEM.georef,scale,method);
+        DEMr = GRIDobj(B,RB);
     elseif isGeographic(DEM)
         scale = DEM.cellsize / target;
-        [B,RB] = georesize(DEM.Z,DEM.georef,scale,method);        
+        [B,RB] = georesize(DEM.Z,DEM.georef,scale,method);
+        DEMr = GRIDobj(B,RB);
     else
+
         if ~isempty(DEM.georef)
+            % DEM has a mapcellreference-object, but no projection
             scale = DEM.cellsize / target;
             [B,RB] = mapresize(DEM.Z,DEM.georef,scale,method);
-        else
-            % no mapping toolbox seems to be available
-            error("Function requires mapping toolbox and georef information to be available.")
+            DEMr = GRIDobj(B,RB);
+
+        elseif isempty(DEM.georef)
+            % no mapping toolbox seems to be available and georef property 
+            % is empty. We'll use image processing tools (tform, imref2d, 
+            % and imwarp.
+            tform = affinetform2d([1 0 0; 0 1 0; 0 0 1]);
+            [im,RA] = GRIDobj2im(DEM);
+            xout = RA.XWorldLimits(1):target:RA.XWorldLimits(2);
+            yout = RA.YWorldLimits(1):target:RA.YWorldLimits(2);
+            RB = imref2d([numel(yout) numel(xout)],xout([1 end]),yout([1 end]));
+            
+            
+            im = imwarp(im,RA,tform,method,...
+                "FillValues",nan,...
+                "OutputView",RB);
+            DEMr = GRIDobj(xout,yout,im);
+
         end
     end
-    DEMr = GRIDobj(B,RB);
+    
 else
     T = maketform('affine',[1 0 0; 0 1 0; 0 0 1]);
     switch method
@@ -119,6 +138,10 @@ else
         error("Function requires mapping toolbox")
     end
 
+end
+DEMr.name = 'resampled';
+if options.crop
+    DEMr = crop(DEMr);
 end
 
 end

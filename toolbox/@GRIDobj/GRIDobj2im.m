@@ -52,11 +52,14 @@ yWorldLimits = yWorldLimits([1 end]);
 
 xWorldLimits = xWorldLimits(:)';
 yWorldLimits = yWorldLimits(:)';
+
 if yWorldLimits(1) > yWorldLimits(2)
     yWorldLimits = fliplr(yWorldLimits);
     Z = flipud(DEM.Z);
 else
     Z = DEM.Z;
 end
+xWorldLimits = xWorldLimits  + DEM.cellsize * ([-.5 .5]);
+yWorldLimits = yWorldLimits  + DEM.cellsize * ([-.5 .5]);
 
 R = imref2d(DEM.size,xWorldLimits,yWorldLimits);

@@ -43,10 +43,11 @@ switch FD.type
         FD.ixc = uint32(IXC(:));
         
     case 'multi'
-        
-        M = FLOWobj2M(FD);
-        G = digraph(M);
+            
+        G = digraph(FD.ix,FD.ixc);
         p = toposort(G);
+        clear G
+        M = FLOWobj2M(FD);
         [FD.ix,FD.ixc,FD.fraction] = find(M(p,p));
         
         p = p(:);
