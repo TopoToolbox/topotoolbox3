@@ -24,6 +24,7 @@ jobs:
         uses: matlab-actions/setup-matlab@v2
         with:
           cache: ${{ matrix.os != 'windows-latest' }}
+          release: ${{ matrix.matlab_version }}
           products: >
             Mapping_Toolbox
             Image_Processing_Toolbox
