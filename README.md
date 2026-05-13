@@ -3,7 +3,6 @@
 <img src="images/topotoolbox3.png" align="center">
 
 [![View TopoToolbox on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://de.mathworks.com/matlabcentral/fileexchange/50124-topotoolbox)
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16743005.svg)](https://doi.org/10.5281/zenodo.16743005)
 
 
