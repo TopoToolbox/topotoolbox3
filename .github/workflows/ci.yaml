@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: true
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v 3.0.1
         with:
           release: ${{ matrix.matlab-version }}
           cache: ${{ matrix.os != 'windows-latest' }}
@@ -50,6 +50,6 @@ jobs:
         run:
           shasum -c --status sha256sum.txt
       - name: Run checks and tests
-        uses: matlab-actions/run-build@v2
+        uses: matlab-actions/run-build@e6fa4ea64b81a3a277395febd62db266faca1d0c # v 3.1.1
         with:
           tasks: compile check test(useGraphics=false)
