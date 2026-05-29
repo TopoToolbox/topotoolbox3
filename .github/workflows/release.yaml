@@ -50,7 +50,7 @@ jobs:
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v 3.0.1
         with:
-          release: r2025a
+          release: latest
           cache: false
           products: >-
             Mapping_Toolbox
