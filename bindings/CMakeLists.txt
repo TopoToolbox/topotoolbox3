@@ -144,6 +144,21 @@ matlab_add_mex(
   LINK_TO topotoolbox
 )
 
+matlab_add_mex(
+  NAME tt_traverse_down_f32_add_mul
+  MODULE
+  SRC tt_traverse_down_f32_add_mul.c
+  R2018a
+  LINK_TO topotoolbox
+)
+
+matlab_add_mex(
+  NAME tt_traverse_down_f64_add_mul
+  MODULE
+  SRC tt_traverse_down_f64_add_mul.c
+  R2018a
+  LINK_TO topotoolbox
+)
 
 install(
   TARGETS tt_has_topotoolbox tt_fillsinks tt_identifyflats
@@ -155,6 +170,8 @@ install(
           tt_excesstopography_fmm2d
           tt_streamquad_trapz_f32
           tt_streamquad_trapz_f64
+	  tt_traverse_down_f32_add_mul
+	  tt_traverse_down_f64_add_mul
   DESTINATION "."
   COMPONENT Runtime
 )
