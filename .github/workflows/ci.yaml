@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-2022]
         matlab-version: [R2023b, latest]
     steps:
       - name: Checkout repository
@@ -24,7 +24,7 @@ jobs:
         uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v 3.0.1
         with:
           release: ${{ matrix.matlab-version }}
-          cache: ${{ matrix.os != 'windows-latest' }}
+          cache: ${{ matrix.os != 'windows-2022' }}
           products: >
             Mapping_Toolbox
             Image_Processing_Toolbox
@@ -46,7 +46,7 @@ jobs:
       - name: Verify snapshot data
         working-directory: tests/snapshots
         shell: bash
-        if: ${{ matrix.os != 'windows-latest' }}
+        if: ${{ matrix.os != 'windows-2022' }}
         run:
           shasum -c --status sha256sum.txt
       - name: Run checks and tests
