@@ -6,7 +6,7 @@ project(
   LANGUAGES C
 )
 
-include(FindMatlab)
+find_package(Matlab)
 
 include(FetchContent)
 FetchContent_Declare(
