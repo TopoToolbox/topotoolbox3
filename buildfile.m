@@ -65,20 +65,31 @@ end
 end
 
 function compileTask(~)
-    %% Path to MATLAB provided cmake
-    cmake = fullfile(matlabroot, 'bin', computer('arch'),'cmake','bin','cmake');
-    % The windows version has a blank in the program folder name
-    % (C:/Program Files), thus we use additional double quotes.
-    cmake = ['"' cmake '"'];
+    % Check if there is a system-provided cmake
+    if system("cmake --version", "LD_LIBRARY_PATH", "") == 0
+        cmake = "cmake";
+        ld_library_path = "";
+    else
+        %% Path to MATLAB provided cmake
+        cmake = fullfile(matlabroot, 'bin', computer('arch'),'cmake','bin','cmake');
+        % The windows version has a blank in the program folder name
+        % (C:/Program Files), thus we use additional double quotes.
+        cmake = ['"' cmake '"'];
+        ld_library_path = getenv("LD_LIBRARY_PATH");
+    end
 
-    if system(strcat(cmake," --version")) ~= 0
+    if system(strcat(cmake," --version"), "LD_LIBRARY_PATH", ld_library_path) ~= 0
         disp("CMake is not provided by MATLAB. MATLAB Coder must be installed.");
         return;
     end
     %% Run cmake
-    system(strcat(cmake," -S bindings/ -B build -DCMAKE_BUILD_TYPE=Release"));
-    system(strcat(cmake," --build build --config Release"));
-    system(strcat(cmake," --install build --prefix toolbox/internal/mex --component Runtime"));
+    system(strcat(cmake," -S bindings/ -B build -DCMAKE_BUILD_TYPE=Release"), ...
+        "LD_LIBRARY_PATH", ld_library_path);
+    system(strcat(cmake," --build build --config Release"), ...
+        "LD_LIBRARY_PATH", ld_library_path);
+    system(strcat(cmake, ...
+        " --install build --prefix toolbox/internal/mex --component Runtime"), ...
+        "LD_LIBRARY_PATH", ld_library_path);
 end
 
 function benchmarkTask(~)
