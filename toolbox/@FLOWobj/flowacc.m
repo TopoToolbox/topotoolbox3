@@ -68,7 +68,7 @@ if ~isempty(RR)
     end
 end
 
-if options.uselibtt
+if options.uselibtt && haslibtopotoolbox
     if isempty(W0)
         W = ones(FD.size);
     elseif isa(W0, "GRIDobj")
