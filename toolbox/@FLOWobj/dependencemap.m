@@ -1,4 +1,4 @@
-function OUT = dependencemap(FD,varargin)
+function OUT = dependencemap(FD, seed1, seed2, options)
 
 %DEPENDENCEMAP Delineate upslope area for specific locations in a DEM
 %
@@ -40,14 +40,18 @@ function OUT = dependencemap(FD,varargin)
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 24. June, 2024
 
+arguments
+    FD  FLOWobj
+    seed1
+    seed2 = []
+    options.uselibtt (1, 1) logical = false
+end
 
-
-%% check input arguments
-narginchk(1,3)
-if nargin == 2
+%% Identify seed pixels
+if isempty(seed2)
     % SEED pixels are either supplied as logical matrix, GRIDobj, or linear
     % index
-    SEED = varargin{1};
+    SEED = seed1;
     isGRIDobj = isa(SEED,'GRIDobj');   
     if (islogical(SEED) || isGRIDobj)
         validatealignment(FD,SEED);
@@ -56,7 +60,7 @@ if nargin == 2
         end
     else
         % SEED is supposed to be supplied as linear index in the GRIDobj
-        ix   = varargin{1};
+        ix   = seed1;
         SEED = false(FD.size);
         ix   = round(ix);
         if any(ix <= 0 | ix > prod(FD.size))
@@ -67,28 +71,25 @@ if nargin == 2
         
         SEED(ix) = true;
     end
-elseif nargin == 3
+else
     % SEED pixels are supplied as coordinate pairs
-    ix   = coord2ind(FD,varargin{1},varargin{2});
+    ix   = coord2ind(FD,seed1,seed2);
     SEED = false(FD.size);
     SEED(ix) = true;
 end
 
-
-% this is a very crude and slow implementation of a graph traversal
-% algorithm since all nodes are visited
-
-if ~(exist(['dependencemap_mex.' mexext],'file') == 3)
-    % m implementation
+%% Compute dependence map
+if options.uselibtt && haslibtopotoolbox
+    W = 0xff * ones(numel(FD.ix), 1, 'uint8');
+    SEED = tt_traverse_up_u8_or_and(uint8(SEED), W, ...
+        int64(FD.ix - 1), int64(FD.ixc - 1));
+    SEED = SEED == 1;
+else
     ixtemp  = FD.ix;
     ixctemp = FD.ixc;
     for r = numel(ixtemp):-1:1
         SEED(ixtemp(r)) = SEED(ixtemp(r)) || SEED(ixctemp(r));
     end
-    
-else
-    % mex implementation
-    SEED = dependencemap_mex(FD.ix,FD.ixc,FD.size,find(SEED));    
 end
 
 

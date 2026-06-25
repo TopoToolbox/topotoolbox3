@@ -35,6 +35,8 @@ set(TT_MEX_TARGETS
   tt_streamquad_trapz_f64
   tt_traverse_down_f32_add_mul
   tt_traverse_down_f64_add_mul
+  tt_traverse_down_u8_or_and
+  tt_traverse_up_u8_or_and
 )
 
 foreach(TT_MEX_TARGET IN LISTS TT_MEX_TARGETS)
