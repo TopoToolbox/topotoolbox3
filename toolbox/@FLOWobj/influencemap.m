@@ -1,4 +1,4 @@
-function OUT = influencemap(FD,varargin)
+function OUT = influencemap(FD,seed1, seed2, options)
 
 %INFLUENCEMAP Downslope area for specific locations in a digital elevation model
 %
@@ -37,13 +37,18 @@ function OUT = influencemap(FD,varargin)
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 31. August, 2024
 
+arguments
+    FD  FLOWobj
+    seed1
+    seed2 = []
+    options.uselibtt (1,1) logical = false
+end
 
 %% check input arguments
-narginchk(1,3)
-if nargin == 2
+if isempty(seed2)
     % SEED pixels are either supplied as logical matrix, GRIDobj, or linear
     % index
-    SEED = varargin{1};
+    SEED = seed1;
     isGRIDobj = isa(SEED,'GRIDobj');   
     if (islogical(SEED) || isGRIDobj)
         validatealignment(FD,SEED);
@@ -52,22 +57,29 @@ if nargin == 2
         end
     else
         % SEED is supposed to be supplied as linear index in the GRIDobj
-        ix   = varargin{1};
+        ix   = seed1;
         SEED = false(FD.size);
         SEED(ix) = true;
     end
-elseif nargin == 3
+else
     % SEED pixels are supplied as coordinate pairs
-    ix   = coord2ind(FD,varargin{1},varargin{2});
+    ix   = coord2ind(FD,seed1,seed2);
     SEED = false(FD.size);
     SEED(ix) = true;
 end
 
 %% Do calculation
+if options.uselibtt && haslibtopotoolbox
+    W = 0xff * ones(numel(FD.ix), 1, 'uint8');
+    SEED = tt_traverse_down_u8_or_and(uint8(SEED), W, ...
+        int64(FD.ix - 1), int64(FD.ixc - 1));
+    SEED = SEED == 1;
+else
 ixtemp  = FD.ix;
 ixctemp = FD.ixc;
 for r = 1:numel(FD.ix)
     SEED(ixctemp(r)) = SEED(ixtemp(r)) || SEED(ixctemp(r));
+end
 end
 
 %% Prepare Output
