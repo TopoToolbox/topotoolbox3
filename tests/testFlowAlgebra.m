@@ -5,6 +5,10 @@ classdef testFlowAlgebra < matlab.perftest.TestCase
         s
     end
 
+    properties (TestParameter)
+        uselibtt = {false, true};
+    end
+
     methods (TestClassSetup)
         % Shared setup for the entire test class
         function generate_data(testCase)
@@ -48,7 +52,7 @@ classdef testFlowAlgebra < matlab.perftest.TestCase
             testCase.verifyEqual(A1.Z, A0.Z, RelTol=1e-5);
         end
 
-        function dependencemap(testCase)
+        function dependencemap(testCase, uselibtt)
             L = GRIDobj(testCase.dem);
             L.Z = false(testCase.dem.size);
 
@@ -57,9 +61,9 @@ classdef testFlowAlgebra < matlab.perftest.TestCase
             ix = find(L.Z);
             [x, y] = ind2coord(testCase.fd, ix);
 
-            I0 = dependencemap(testCase.fd, L);
-            I1 = dependencemap(testCase.fd, ix);
-            I2 = dependencemap(testCase.fd, x, y);
+            I0 = dependencemap(testCase.fd, L, uselibtt=uselibtt);
+            I1 = dependencemap(testCase.fd, ix, uselibtt=uselibtt);
+            I2 = dependencemap(testCase.fd, x, y, uselibtt=uselibtt);
             
             testCase.verifyEqual(I0.Z, I1.Z);
             testCase.verifyEqual(I0.Z, I2.Z);
