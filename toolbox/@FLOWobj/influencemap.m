@@ -20,6 +20,11 @@ function OUT = influencemap(FD,seed1, seed2, options)
 %     ix        linear index into a grid
 %     x,y       coordinate pairs
 %
+%     Parameter name/value pairs
+%
+%     'uselibtt'  {false} or true. If true, influencemap will use
+%                 libtopotoolbox if available.
+%
 % Output
 %
 %     I         logical influence grid (GRIDobj)
@@ -35,7 +40,8 @@ function OUT = influencemap(FD,seed1, seed2, options)
 % See also: FLOWobj, FLOWobj/DEPENDENCEMAP
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
-% Date: 31. August, 2024
+%         Will Kearney
+% Date: 26. June, 2026
 
 arguments
     FD  FLOWobj
