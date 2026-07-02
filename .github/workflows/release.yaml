@@ -15,12 +15,12 @@ jobs:
     outputs:
       new-tag: ${{ steps.tag.outputs.TAG }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: TopoToolbox/actions/checkout@main
         with:
           fetch-depth: 0
           fetch-tags: true # Fetch all the tags so that we compute release number correctly
       - name: Download compiled toolboxes
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: TopoToolbox/actions/download-artifact@main
         with:
           path: release
           pattern: "toolbox-*-*"
@@ -44,11 +44,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: TopoToolbox/actions/checkout@main
         with:
           submodules: true
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v 3.0.1
+        uses: TopoToolbox/actions/setup-matlab@main
         with:
           release: latest
           cache: false
@@ -58,15 +58,15 @@ jobs:
             Optimization_Toolbox
             MATLAB_Coder
       - name: Compile libtopotoolbox and MEX files
-        uses: matlab-actions/run-build@e6fa4ea64b81a3a277395febd62db266faca1d0c # v 3.1.1
+        uses: TopoToolbox/actions/run-build@main
         with:
           tasks: compile
       - name: Build docs
-        uses: matlab-actions/run-build@e6fa4ea64b81a3a277395febd62db266faca1d0c # v 3.1.1
+        uses: TopoToolbox/actions/run-build@main
         with:
           tasks: doc
       - name: Upload docs as artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: TopoToolbox/actions/upload-artifact@main
         with:
           name: toolbox-docs
           path: toolbox/docs/html
@@ -89,11 +89,11 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: TopoToolbox/actions/checkout@main
         with:
           submodules: true
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v 3.0.1
+        uses: TopoToolbox/actions/setup-matlab@main
         with:
           cache: ${{ matrix.os != 'windows-latest' }}
           products: >
@@ -102,17 +102,17 @@ jobs:
             Optimization_Toolbox
             MATLAB_Coder
       - name: Download created docs
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: TopoToolbox/actions/download-artifact@main
         with:
           name: toolbox-docs
           path: toolbox/docs/html/
       - name: Build MEX files
         if: ${{ matrix.mex }}
-        uses: matlab-actions/run-build@e6fa4ea64b81a3a277395febd62db266faca1d0c # v 3.1.1
+        uses: TopoToolbox/actions/run-build@main
         with:
           tasks: compile
       - name: Build package
-        uses: matlab-actions/run-build@e6fa4ea64b81a3a277395febd62db266faca1d0c # v 3.1.1
+        uses: TopoToolbox/actions/run-build@main
         with:
           tasks: package
       - name: Move un-compiled package to one with a generic name
@@ -120,7 +120,7 @@ jobs:
         shell: bash
         run: mv release/TopoToolbox_win64.mltbx release/TopoToolbox_nolibtt.mltbx
       - name: Upload toolbox as artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: TopoToolbox/actions/upload-artifact@main
         with:
           name: toolbox-${{ matrix.os }}-${{ matrix.mex }}
           path: release/TopoToolbox_*.mltbx

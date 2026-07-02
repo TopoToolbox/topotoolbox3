@@ -17,11 +17,11 @@ jobs:
         matlab-version: [R2023b, latest]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: TopoToolbox/actions/checkout@main
         with:
           submodules: true
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@a0180c939fb1a28de13f44f7b778b912384ced1f # v 3.0.1
+        uses: TopoToolbox/actions/setup-matlab@main
         with:
           release: ${{ matrix.matlab-version }}
           cache: ${{ matrix.os != 'windows-latest' }}
@@ -31,7 +31,7 @@ jobs:
             MATLAB_Coder
       - name: Cache snapshot data
         id: cache-snapshots
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: TopoToolbox/actions/cache@main
         with:
           path: tests/snapshots/data
           key: snapshots-${{ env.snapshot_version }}
@@ -50,6 +50,6 @@ jobs:
         run:
           shasum -c --status sha256sum.txt
       - name: Run checks and tests
-        uses: matlab-actions/run-build@e6fa4ea64b81a3a277395febd62db266faca1d0c # v 3.1.1
+        uses: TopoToolbox/actions/run-build@main
         with:
           tasks: compile check test(useGraphics=false)
