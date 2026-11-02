@@ -90,7 +90,7 @@ function ht = surf(DEM,varargin)
 p = inputParser;
 p.KeepUnmatched = true;
 addOptional(p,'A',[]);
-addParameter(p,'maxrowsorcols',2000)
+addParameter(p,'maxrowsorcols',3000)
 addParameter(p,'exaggerate',1);
 addParameter(p,'block',false);
 addParameter(p,'baselevel',[]);

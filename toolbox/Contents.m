@@ -10,13 +10,13 @@
 % If you have any questions or remarks, please contact the authors:
 %
 % Wolfgang Schwanghart
-% schwangh[at]uni-potsdam.de
+% w.schwanghart[at]fu-berlin.de
 %
 % Dirk Scherler
 % scherler[at]gfz-potsdam.de
 %
 % William Kearney
-% william.kearney@uni-potsdam.de
+% william.kearney[at]uni-potsdam.de
 % 
 % When you use TopoToolbox in your work, please reference one of these 
 % publications:
@@ -160,21 +160,25 @@
 %     DEPENDENCEMAP           : Delineate upslope area for specific locations in a DEM
 %     DRAINAGEBASINS          : drainage basin delineation/catchments
 %     DRAINAGEBASINSTATS      : Zonal statistics on drainage basins
+%     FHAND                   : Fuzzy height above nearest drainage (HAND)
+%     FHBR                    : Fuzzy Height Below Ridge (fHBR)
 %     FIND                    : Find indices and values of edges in the flow direction graph
 %     FLIPDIR                 : Flip direction of flow
 %     FLOWACC                 : flow accumulation (upslope area, contributing area)
 %     FLOWCONVERGENCE         : Compute flow convergence of a digital elevation model
-%     FLOWDISTANCE            : flow distance in upstream and downstream direction
+%     FLOWDISTANCE            : Flow distance in upstream and downstream direction
 %     FLOWDIVERGENCE          : Calculate the number of downstream neighbors
 %     FLOWPATHEXTRACT         : Extract linear indices of a single flowpath in a DEM
 %     FLOWTIME                : Flow time (and distance) in upstream direction
 %     FLOWVEC                 : Velocity vectors from FLOWobj
+%     GETOUTLETS              : Retrieve outlets of a flow network (FLOWobj)
 %     GRADIENT                : Gradient along flow direction
 %     IMPOSEMIN               : Minima imposition (carving) along drainage network
 %     IND2COORD               : Convert linear index to x and y coordinates
 %     INFLUENCEMAP            : Downslope area for specific locations in a digital elevation model
-%     ISMULTI                 : Determine whether FD is multi or single flow direction
+%     ISMULTI                 : Determine whether FD is multi (incl. Dinf) or single flow direction
 %     MAPFROMNAL              : Map values from node-attribute list to nearest upstream grid
+%     MEANFLOWDIST            : Average flow distance based on multiple flow directions
 %     MELTONRUGGEDNESS        : Melton ruggedness
 %     MULTI2SINGLE            : Converts multiple to single flow direction
 %     MULTI_NORMALIZE         : Create flow direction object
@@ -183,8 +187,10 @@
 %     QUANTCARVE              : Quantile carving
 %     RANDOMIZE               : Randomize multiple flow directions
 %     REMOVESMALLFRACTIONS    : Remove links with small fractions in FLOWobj
+%     REWEIGHT                : Re-calculate flow weights in a multiple flow direction FLOWobj
 %     SAVEOBJ                 : Create flow direction object
 %     SLOPEAREATOOL           : Interactively create slope area plots and fit power laws
+%     SLOPEPOSITION           : Slope position index (relative relief)
 %     STREAMORDER             : Calculate stream order based on a FLOWobj and stream grid
 %     TFACTOR                 : Transverse topographic symmetry (T-)factor
 %     UPDATETOPOSORT          : Update topological sorting
@@ -382,7 +388,6 @@
 %     TLENGTH                   : Total length of the stream network
 %     VORONOI                   : Nearest neighbor search on a stream network
 %     WMPLOT                    : Plot instance of PPS in webmap browswer
-%
 %
 % Other tools (utitilies)
 %

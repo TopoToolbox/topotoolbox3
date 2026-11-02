@@ -13,8 +13,11 @@ function d = netdist(S,a,options)
 % Description
 %
 %     netdist computes the distance along a stream network S. It calculates
-%     the distance of each node in the network from the nearest non-zero
-%     node in the node-attribute list a.
+%     the distance of each node in the stream network to the nearest 
+%     non-zero node (source nodes) in the node-attribute list a. 
+%     Alternatively, source nodes can be provided using a linear index 
+%     the DEM (the locations must be on the stream network), a GRIDobj or a
+%     string or character array accepted by the function streampoi.
 %
 % Input arguments
 %
@@ -59,9 +62,7 @@ function d = netdist(S,a,options)
 %     hold on
 %     plot(x,y,'ok');
 %
-%
-%
-% See also: STREAMobj/distance, 
+% See also: STREAMobj/distance, PPS/netdist 
 %
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 7. March, 2025

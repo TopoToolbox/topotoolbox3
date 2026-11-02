@@ -139,3 +139,8 @@ Earth Surface Dynamics, 8, 261-274. [DOI: 10.5194/esurf-8-261-2020](http://dx.do
 - Schwanghart, W., Molkenthin, C., & Scherler, D. (2020). A systematic approach and software for the analysis 
 of point patterns on river networks. Earth Surface Processes and Landforms, 46, 9, 1847-1862. [DOI: 10.1002/esp.5127](http://dx.doi.org/10.1002/esp.5127)
 
+### Slope position, fuzzy Height Above Nearest Drainage (fHAND) and fuzzy Height Below Ridge (fHBR)
+
+- Roering, J.J., Lawrence, E.R., Plescher, R., Sanders, M.A., Nash, D., Patton, A.I., Johnson, A., Jacobs, A., 
+Mathews N.W., Salomon, L., McKay, S., Schwanghart, W., Struble, W., Aboudara, Q. (2026). Shallow landslides 
+align with atmospheric rivers in coastal steeplands. Geophysical Research Letters, 53, e2026GL124294. [DOI: 10.1029/2026GL124294](http://dx.doi.org/10.1029/2026GL124294)

@@ -330,6 +330,10 @@ classdef GRIDobj
             %
             %     typename = underlyingType(A)
             %
+            arguments
+                A GRIDobj
+            end
+
             typename = class(A.Z);
         end
 
@@ -340,7 +344,14 @@ classdef GRIDobj
             %
             %     tf = isUnderlyingType(A,typename)
             %
-            tf = strcmp(underlyingType(A),typename);
+            arguments
+                A GRIDobj
+                typename {mustBeMember(typename, ...
+                    {'double','single','logical',...
+                    'uint64','uint32','uint16','uint8',...
+                    'int64','int32','int16','int8'})}
+            end
+            tf = strcmpi(underlyingType(A),typename);
         end
 
         function mustBeUnderlyingType(A,typename)

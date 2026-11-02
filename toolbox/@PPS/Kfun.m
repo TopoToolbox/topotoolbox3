@@ -1,4 +1,4 @@
-function OUT = Kfun(P,varargin)
+function OUT = Kfun(P,options)
 
 %Kfun K-function of a point pattern on a stream network
 %
@@ -27,8 +27,8 @@ function OUT = Kfun(P,varargin)
 %              means that there is no theoretic CRS K function for 'okabe'.
 %      'maxdist'   scalar. Maximum distance used to calculate the K-
 %              function. The default is diameter(P)/20.
-%      'val'   node attribute list with custom distance value. By default,
-%              the distance is measured in mapunits
+%      'distance'  node attribute list with custom distance value. By
+%              default, the distance is measured in mapunits
 %      'plot'  {false} or true: If true, the function will create a plot
 %              with the start and end point of the path with the maximum 
 %              length.
@@ -64,50 +64,51 @@ function OUT = Kfun(P,varargin)
 %
 % See also: PPS
 %
-% Author: Wolfgang Schwanghart (w.schwanghart[at]geo.uni-potsdam.de)
+% Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 22. December, 2020
 
 
 %% Calculate graph diameter to get maximum distance
 
-p  = inputParser;
-addParameter(p,'d3d',false);
-addParameter(p,'val',[]);
-addParameter(p,'maxdist',[]);
-addParameter(p,'n',50);
-addParameter(p,'nsim',39);
-addParameter(p,'method','ang');
-addParameter(p,'plot',true);
-addParameter(p,'int',[],@(x) isnal(P.S,x));
-parse(p,varargin{:});
+arguments
+    P PPS
+    options.d3d (1,1) = false
+    options.distance  = P.S.distance
+    options.maxdist   = []
+    options.n   (1,1) = 50
+    options.nsim (1,1) = 39
+    options.method  {mustBeMember(options.method,{'ang','okabe'})} = 'ang'
+    options.plot (1,1) = true
+    options.int     = []
+end
 
-if ~isempty(p.Results.maxdist)
-    maxdist = p.Results.maxdist;
+if ~isempty(options.maxdist)
+    maxdist = options.maxdist;
 else
-    dmax = diameter(P,'val',p.Results.val,'d3d',p.Results.d3d);
+    dmax = diameter(P,'val',options.distance,'d3d',options.d3d);
     maxdist = dmax/20;
 end
 
-nsim = p.Results.nsim;
-method = validatestring(p.Results.method,{'ang','okabe'});
+nsim = options.nsim;
+method = options.method;
 
 %% Simulate point patterns
 total_length = tlength(P);
 np = npoints(P);
 
 if nsim > 0
-    if isempty(p.Results.int)
-        C = simulate(P,'intensity',intensity(P) - 1/total_length,'nsim',p.Results.nsim);
+    if isempty(options.int)
+        C = simulate(P,'intensity',intensity(P) - 1/total_length,'nsim',options.nsim);
     else
-        int = p.Results.int * (1-1/total_length);
-        C = simulate(P,'intensity',int,'nsim',p.Results.nsim);
+        int = options.int * (1-1/total_length);
+        C = simulate(P,'intensity',int,'nsim',options.nsim);
     end
     IXSP = cellfun(@(x) x.PP,C,'UniformOutput',false);
 end
 
 %% calculate m
 % For all points calculate the number of points that are exactly 
-dvec = linspace(0,maxdist,p.Results.n+1);
+dvec = linspace(0,maxdist,options.n + 1);
 ixgrid = P.S.IXgrid(P.PP);
 
 if nsim > 0
@@ -120,12 +121,12 @@ Kloc = nan(npoints(P),numel(dvec)-1);
 
 % Calculate local K functions
 
-if isempty(p.Results.int)
+if isempty(options.int)
     intp = [];
     int  = [];
 else
-    intp = getmarks(P,p.Results.int);
-    int  = p.Results.int;
+    intp = getmarks(P,options.int);
+    int  = options.int;
 end
     
 
@@ -163,7 +164,7 @@ for r = 1:npoints(P)
 
     if nsim > 0
         % local K function under CRS assumption
-        sim = nan(numel(C),p.Results.n);
+        sim = nan(numel(C),options.n);
         if isempty(intp) || strcmp(method, 'okabe')
             for rsim = 1:numel(IXSP)
                 sim(rsim,:) = histcounts(d(IXSP{rsim}),dvec(1:end),'Normalization','cumcount');
@@ -198,7 +199,7 @@ inan = isinf(Kloc) | isnan(Kloc);
 Kloc(inan) = nan;
 switch method
     case 'ang'
-        if isempty(p.Results.int)
+        if isempty(options.int)
             K = mean(Kloc,'omitnan');
         else
             K = 1/sum(1./intp) * sum(Kloc,'omitnan');
@@ -210,15 +211,15 @@ end
 
 % the simulated K function
 if nsim > 0
-Ksim = nan(p.Results.nsim,p.Results.n);
-for r = 1:p.Results.nsim
+Ksim = nan(options.nsim,options.n);
+for r = 1:options.nsim
     Kloc = cellfun(@(x) x(r,:),Klocsim,'UniformOutput',false);
     Kloc = vertcat(Kloc{:});
     inan = isinf(Kloc) | isnan(Kloc);
     Kloc(inan) = nan;
     switch method
         case 'ang'
-            if isempty(p.Results.int)
+            if isempty(options.int)
                 Ksim(r,:) = mean(Kloc,'omitnan');
             else
                 Ksim(r,:) = 1/sum(1./intp) * sum(Kloc,'omitnan');
@@ -238,7 +239,7 @@ patch([dvec(:); flipud(dvec(:))],...
 hold on
 end
 
-if p.Results.plot
+if options.plot
 switch method
     case 'ang'
         plot([0 dvec(end)],[0 dvec(end)],'k--')
