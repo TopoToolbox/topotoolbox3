@@ -39,10 +39,16 @@ U.Z = cart2pol(U.Z,V.Z);
 
 cmaps = ttscm;
 cmaps = cmaps';
+I     = ~ (endsWith(cmaps,'S','IgnoreCase',false) | ...
+           endsWith(cmaps,'W','IgnoreCase',false) | ...
+           endsWith(cmaps,'K','IgnoreCase',false) | ...
+           endsWith(cmaps,'O','IgnoreCase',false));
+cmaps = cmaps(I);
+cmaps = cmaps(1:28);
 ixx   = 2:4;
 cmaps(1,ixx) = {flowdistance(FD) 'flowdistance (up)' []};
 cmaps(2,ixx) = {vertdistance2stream(FD,S,DEM) 'vertdistancetostream' []};
-cmaps(3,ixx) = {excesstopography(DEM,'maxgradient',20,'kernelsize',31) 'excesstopography' []};
+cmaps(3,ixx) = {excesstopography(DEM,0.1) 'excesstopography' []};
 cmaps(4,ixx) = {filter(DEM,'sobel') 'filter (sobel)' [0 200]};
 cmaps(5,ixx) = {roughness(filter(DEM)) 'roughness' [0 20]};
 cmaps(6,ixx) = {mapfromnal(FD,S,k) 'mapfromnal' []};
