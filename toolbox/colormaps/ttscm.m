@@ -78,6 +78,9 @@ function cmap = ttscm(name,n,percrange)
 %      and StagLab 3.0, Geosci. Model Dev., 11, 2541-2562. 
 %      doi:10.5194/gmd-11-2541-2018
 %
+%      Crameri, F., G.E. Shephard, and P.J. Heron (2020), The misuse of 
+%      colour in science communication, Nature Communications, 11, 5444, 
+%      https://doi.org/10.1038/s41467-020-19160-7
 %
 % See also: GRIDobj/IMAGESCHS, ttcmap, ttscmposter
 %
@@ -85,10 +88,24 @@ function cmap = ttscm(name,n,percrange)
 % Date: 6. June, 2024
 
 arguments 
-    name = "batlow"
+    name {mustBeMember(name,...
+        {'acton','actonS','bam','bamO','bamako','bamakoS','batlow-X0',...
+        'batlow-X1','batlow','batlowK','batlowKS','batlowO','batlowS',...
+        'batlowW','batlowWS','berlin','bilbao','bilbaoS','broc',...
+        'brocO','buda','budaS','bukavu','cork','corkO','davos',...
+        'davosS','delphi','devon','devonS','fes','glasgow','glasgowS',...
+        'grayC','grayCS','hawaii','hawaiiS','imola','imolaS','lajolla',...
+        'lajollaS','lapaz','lapazS','lipari','lipariS','lisbon',...
+        'managua','navia','naviaS','naviaW','naviaWS','nuuk','nuukS',...
+        'oleron','oslo','osloS','roma','romaO','ston','tofino','tokyo',...
+        'tokyoS','turku','turkuS','vanimo','vik','vikO'})} = "batlow"
     n (1,1) {mustBePositive,mustBeInteger} = 255
     percrange = []
 end
+
+% getall colormaps
+
+
 
 % get location of this function
 p = fileparts(mfilename('fullpath'));
@@ -101,7 +118,7 @@ if nargin == 0 && nargout == 0
            'Name', 'Scientific Colour Maps', 'NumberTitle', 'off');
            
 	imshow([p filesep 'private' ...
-            filesep '+ScientificColourMaps8-FabioCrameri.png'],...
+            filesep '+ScientificColourMaps9-FabioCrameri.png'],...
             'InitialMagnification','fit')
 	return
 elseif nargin == 0 && nargout == 1
@@ -152,6 +169,7 @@ end
 ncolors = size(cmap,1);
 if n ~= ncolors
 	cmap    = interp1((1:ncolors)',cmap,linspace(1,ncolors,n));
+end
 end
 
 
