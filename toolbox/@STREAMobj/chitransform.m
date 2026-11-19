@@ -72,10 +72,10 @@ function c = chitransform(S,A,options)
 arguments
     S      STREAMobj 
     A      {mustBeGRIDobjOrNal(A,S)}
-    options.mn     {mustBeNumeric,mustBePositive} = 0.45
-    options.a0     {mustBeNumeric,mustBePositive} = 1e6
-    options.plot   = false
-    options.correctcellsize = true
+    options.mn    (1,1) {mustBeNumeric,mustBeNonnegative} = 0.45
+    options.a0    (1,1) {mustBeNumeric,mustBePositive} = 1e6
+    options.plot  (1,1) = false
+    options.correctcellsize (1,1) = true
     options.K      {mustBeGRIDobjOrNalOrEmpty(options.K,S)} = []
     options.tribsonly = []
 
