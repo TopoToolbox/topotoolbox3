@@ -57,6 +57,7 @@ end
 
 if nargin==2
     type = 'segment';
+    val = 0;
 elseif nargin==3 && ischar(varargin{1})
     type = varargin{1};
     validatestring(type,{'segment','order'});
@@ -73,8 +74,8 @@ else
 end
 
 if ~strcmp(DIN.ordertype,'topo') && strcmp(type,'segment')
-    warning(['Ordertype is "%s". Shrinking by segment',...
-        'may produce unexpected results'],type);
+    warning(['Ordertype is "%s". Shrinking by segment ',...
+        'may produce unexpected results'],DIN.ordertype);
 end
 
 
