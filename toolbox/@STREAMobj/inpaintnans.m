@@ -1,4 +1,4 @@
-function z = inpaintnans(S,DEM,varargin)
+function z = inpaintnans(S,DEM,extrap,options)
 
 %INPAINTNANS Inpaint missing values (nans) in a node attribute list
 %
@@ -62,45 +62,39 @@ function z = inpaintnans(S,DEM,varargin)
 % Author: Wolfgang Schwanghart (schwangh[at]uni-potsdam.de)
 % Date: 7. March, 2025
 
-if nargin > 3
-    p = inputParser;
-    p.FunctionName = 'STREAMobj/inpaintnans';
-    addParameter(p,'extrapolation',true,@(x) isscalar(x));
-    addParameter(p,'distance',S.distance);
-    addParameter(p,'maxgapsize',inf,@(x) validateattributes(x,'numeric',{'>',S.cellsize}));
-    parse(p,varargin{:});
-    
-    extrap = p.Results.extrapolation;
-    d      = p.Results.distance;
-    maxgapsize = p.Results.maxgapsize;
-else
-    if nargin == 2
-        extrap = false;
-    else
-        extrap = varargin{1};
-    end
-    d  = S.distance;
-    maxgapsize = inf;
+arguments
+    S  STREAMobj
+    DEM {mustBeGRIDobjOrNal(DEM,S)}
+    extrap (1,1) = false
+    options.extrapolation (1,1) = false
+    options.distance = S.distance
+    options.maxgapsize (1,1) {mustBeNonnegative} = inf
+    options.bytributary (1,1) = false
 end
 
-% get node attribute list with elevation values
-if isa(DEM,'GRIDobj')
-    tf = validatealignment(S,DEM);
-    if tf
-        z = getnal(S,DEM);
-    else
-        z = interp(DEM,S.x,S.y);
-    end
-elseif isnal(S,DEM)
-    z = DEM;
-else
-    error('Imcompatible format of second input argument')
-end
 
-z    = double(z(:));
+z = ezgetnal(S,DEM,'double');
 inan = isnan(z);
 
+d = options.distance;
+
+if any([extrap options.extrapolation])
+    extrap = true;
+end
+maxgapsize = options.maxgapsize;
+
 if ~any(inan)
+    return
+end
+
+if options.bytributary
+    [CS,locS,~] = STREAMobj2cell(S,'tributaries');
+    
+    for r = 1:numel(CS)
+        z(locS{r}) = inpaintnans(CS{r},z(locS{r}),extrap,'bytributary', false, ...
+                                 'maxgapsize',options.maxgapsize,...
+                                 'distance',d(locS{r}));
+    end
     return
 end
 
